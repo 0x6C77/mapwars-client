@@ -1,0 +1,11 @@
+<resources>
+    
+	<style name="DefaultInput">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/input_background</item>
+        <item name="android:ems">10</item>
+        <item name="android:layout_marginBottom">6dp</item>
+    </style>
+
+</resources>
