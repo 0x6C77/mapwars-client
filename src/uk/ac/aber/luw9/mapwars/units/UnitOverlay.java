@@ -12,6 +12,10 @@ import uk.ac.aber.luw9.mapwars.controllers.UnitController;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.location.Location;
 import android.util.Log;
@@ -24,11 +28,14 @@ public class UnitOverlay extends Overlay {
 	private ArrayList<Unit> unitsSelected = new ArrayList<Unit>();
 	private int TAP_RADIUS = 20;
 	private int UNIT_RADIUS = 25;
+	private boolean unitSelecting, unitSelectionDone;
+	private float unitSelectionStartX, unitSelectionEndX, unitSelectionStartY, unitSelectionEndY;
 	
 	public UnitOverlay(UnitController controller, GameMap map) {
 		super(map.getApplicationContext());
 		this.unitController = controller;
 		map.addOverlay(this);
+		
 		overlay_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1);
 		overlay_user_selected = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1_selected);
 		overlay_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_2);
@@ -40,39 +47,49 @@ public class UnitOverlay extends Overlay {
         tapLocation.setLatitude(tapPoint.getLatitudeE6() / 1E6);
         tapLocation.setLongitude(tapPoint.getLongitudeE6() / 1E6);
 		
-		//mapView.postInvalidate();
-		if (unitsSelected.isEmpty()) {			
-			//look for unit
-			ArrayList<Unit> units = unitController.getUnits(true);
-		    for (Unit unit : units) {
-		    	GeoPoint unitPoint = unit.getLocation();
-     
-		        Location unitLocation = new Location("point A");
-		        unitLocation.setLatitude(unitPoint.getLatitudeE6() / 1E6);
-		        unitLocation.setLongitude(unitPoint.getLongitudeE6() / 1E6);
-		        double distance = tapLocation.distanceTo(unitLocation);
-		        
-		        Log.i("UnitOverlayTap", String.valueOf(distance));
-		        
-		        if (distance < TAP_RADIUS) {
-		        		unit.select();
-		        		unitsSelected.add(unit);
-		        		//map.showUnitInfo(unit);
-		        		//return true;
+        //Track if a new unit has been selected this tap
+        boolean newUnit = false;
+       
+		//look for unit
+		ArrayList<Unit> units = unitController.getUnits(true);
+		
+	    for (Unit unit : units) {
+	    	
+	    	GeoPoint unitPoint = unit.getLocation();
+ 
+	        Location unitLocation = new Location("point A");
+	        unitLocation.setLatitude(unitPoint.getLatitudeE6() / 1E6);
+	        unitLocation.setLongitude(unitPoint.getLongitudeE6() / 1E6);
+	        
+	        double distance = tapLocation.distanceTo(unitLocation);
+	        
+	        Log.i("UnitOverlayTap", String.valueOf(distance));
+	        
+	        if (distance < TAP_RADIUS) {
+		    	//If the unit is already selected, unselect
+		    	if (unit.isSelected()) {
+			    	unit.unselect();
+			    	unitsSelected.remove(unit);
 		        } else {
-		        	unit.unselect();
-		        	unitsSelected.remove(unit);
+		        	unit.select();
+		        	unitsSelected.add(unit);
 		        }
-			}
-		} else {
+		    	
+		    	newUnit = true;
+	        }
+		}
+
+	    //if no new units have been selected then user must have clicked an empty area thus move units
+	    if (!newUnit) {
+	    	Log.i("UnitOverlayMove", "moving");
 			//move selected units to location
 			for (Unit unit : unitsSelected) {
 				unit.unselect();
 				unitController.moveUnit(unit.getId(), tapPoint, true);
 			}
 			unitsSelected.clear();
-		}
-	        
+	    }
+
 	    //force redraw
 	    mapView.invalidate();
 		return false;
