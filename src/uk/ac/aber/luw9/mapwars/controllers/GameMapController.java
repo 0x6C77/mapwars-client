@@ -19,8 +19,8 @@ import android.view.View.OnClickListener;
 
 public class GameMapController implements OnClickListener, MapListener {
 
-	private static MainController mainController;
-	private static GameMap gameMap;
+	private MainController mainController;
+	private GameMap gameMap;
 	private LocationTracker locationTracker;
 	private InternetService internetService;
 	private UnitController unitController;
@@ -31,6 +31,7 @@ public class GameMapController implements OnClickListener, MapListener {
 		mainController = MainController.getController((Activity)map);
 		mainController.setGameMapController(this);
 		
+		//Internet availability is a given, otherwise user will not have logged in
 		this.internetService = mainController.getInternetService();
 		if (internetService.startThread()) {
 			serviceOnline("Internet");
