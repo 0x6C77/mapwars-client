@@ -2,9 +2,13 @@ package uk.ac.aber.luw9.mapwars;
 
 import uk.ac.aber.luw9.mapwars.controllers.MainController;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.provider.SyncStateContract.Constants;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
@@ -76,7 +80,24 @@ public class HomeScreen extends Activity implements OnClickListener, OnKeyListen
 	            	
 	            	//((TextView)findViewById(R.id.login_error)).setHeight(android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
 	            	
-	            	controller.loginUser(username, password);
+	            	boolean status = controller.loginUser(username, password);
+	            	if (!status) {
+	            		try {
+	            		    AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+
+	            		    alertDialog.setTitle("No Internet Connection");
+	            		    alertDialog.setMessage("Internet not available, Please check your internet connectivity and try again");
+	            		    alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+	            		       public void onClick(DialogInterface dialog, int which) {
+	            		         //finish();
+	            		       }
+	            		    });
+
+	            		    alertDialog.show();
+	            		} catch(Exception e) {
+	            			//
+	            		}
+	            	}
             	}
             	
                 break;
