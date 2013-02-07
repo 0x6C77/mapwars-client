@@ -76,8 +76,8 @@ public class MainController {
 	 * @param user submitted username to be checked
 	 * @param pass submitted password to be checked
 	 */
-	public void loginUser(String user, String pass) {
-		internetService.login(user, pass);
+	public boolean loginUser(String user, String pass) {
+		return internetService.login(user, pass);
 	}
 
 	public void handleTCPReply(JSONObject json) throws JSONException {

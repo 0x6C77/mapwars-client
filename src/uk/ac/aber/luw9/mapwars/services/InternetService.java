@@ -27,8 +27,10 @@ public class InternetService {
 	    ConnectivityManager connectivityManager 
 	          = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
 	    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-	    
-	    return activeNetworkInfo != null;
+	   
+	    return (activeNetworkInfo != null
+	    		&& activeNetworkInfo.isAvailable()
+                && activeNetworkInfo.isConnected());
 	}
 	
 	public boolean getNetworkAvailability() {
@@ -39,17 +41,24 @@ public class InternetService {
 		this.user = user;
 	}
 
-	public void login(String user, String pass) {
+	public boolean login(String user, String pass) {
+		if (!isNetworkAvailable())
+			return false;
+		
 		JSONObject jsonObject = new JSONObject();
         try {
         	jsonObject.put("action", "login");
 			jsonObject.put("user", user);
 	        jsonObject.put("pass", pass);
 			tcpClient.sendMessage(jsonObject.toString());
+			
+			return true;
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+        
+        return false;
 	}
 	
 	public void updateLocation(Location location) {	
