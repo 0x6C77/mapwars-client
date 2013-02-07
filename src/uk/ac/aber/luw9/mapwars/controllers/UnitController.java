@@ -129,6 +129,8 @@ public class UnitController implements Runnable {
 	public void run() {
 		GeoPoint pt, tmpPt;
 		Location loc, tmpLoc;
+		boolean unitsMoved = false;
+		
 		for (Unit unit : units) {
 			pt = unit.getLocation();
 			tmpPt = unit.getTargetLocation();
@@ -149,8 +151,13 @@ public class UnitController implements Runnable {
 				pt.setLatitudeE6(newLat);
 				pt.setLongitudeE6(newLon);
 				unit.setLocation(pt);
+				
+				unitsMoved = true;
 			}
 		}
-		map.redraw();
+		
+		if (unitsMoved) {
+			map.redraw();
+		}
 	}
 }
