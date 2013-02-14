@@ -41,7 +41,7 @@ public class GameMapController implements OnClickListener, MapListener {
 		
 		this.unitController = new UnitController(map);
 	}
-
+ 
 	public void serviceOnline(String service) {
 		gameMap.serviceOnline(service);
 	}
@@ -93,6 +93,7 @@ public class GameMapController implements OnClickListener, MapListener {
     			gameMap.toggleShop();
     			//create unit
     			loc = locationTracker.getLocation();
+    			Log.i("GameMapController", loc.toString());
     			internetService.createUnit(UnitType.USER, loc);
     			break;
 		}

@@ -122,7 +122,8 @@ public class UnitController implements Runnable {
 	}
 
 	public void stopThread() {
-		exec.shutdown();
+		if (exec != null)
+			exec.shutdown();
 	}
 	
 	@Override

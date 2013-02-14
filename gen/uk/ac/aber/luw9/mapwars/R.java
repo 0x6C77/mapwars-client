@@ -30,19 +30,18 @@ public final class R {
     }
     public static final class id {
         public static final int container=0x7f06000d;
-        public static final int headerShopButton=0x7f060016;
+        public static final int headerShopButton=0x7f060015;
         public static final int imageView1=0x7f060001;
         public static final int loadingText=0x7f06000c;
-        public static final int locationControls=0x7f060013;
+        public static final int locationControls=0x7f060012;
         public static final int login_button=0x7f060004;
         public static final int login_pass=0x7f060003;
         public static final int login_user=0x7f060002;
         public static final int map=0x7f06000e;
-        public static final int menu_exit=0x7f06001a;
-        public static final int menu_settings=0x7f060019;
-        public static final int overlayHeader=0x7f060015;
-        public static final int overlayShop=0x7f060017;
-        public static final int overlayUnitInfo=0x7f06000f;
+        public static final int menu_exit=0x7f060019;
+        public static final int menu_settings=0x7f060018;
+        public static final int overlayHeader=0x7f060014;
+        public static final int overlayShop=0x7f060016;
         public static final int reg_button=0x7f06000b;
         public static final int reg_email=0x7f060008;
         public static final int reg_pass=0x7f060009;
@@ -51,11 +50,11 @@ public final class R {
         public static final int scrollView1=0x7f060000;
         public static final int textView1=0x7f060005;
         public static final int textView2=0x7f060006;
-        public static final int trackLocationButton=0x7f060014;
-        public static final int unitBuyButton=0x7f060018;
-        public static final int zoomControls=0x7f060010;
-        public static final int zoomInButton=0x7f060012;
-        public static final int zoomOutButton=0x7f060011;
+        public static final int trackLocationButton=0x7f060013;
+        public static final int unitBuyButton=0x7f060017;
+        public static final int zoomControls=0x7f06000f;
+        public static final int zoomInButton=0x7f060011;
+        public static final int zoomOutButton=0x7f060010;
     }
     public static final class layout {
         public static final int home_screen=0x7f030000;

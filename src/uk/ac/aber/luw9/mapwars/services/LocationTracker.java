@@ -44,9 +44,6 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		if (!isGPSEnabled && !isNetworkEnabled) {
 			Log.i("Location", "No locations");
-			Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-			startActivity(myIntent);
-            // no network provider is enabled
         } else {
             // First get location from Network Provider
             //if (isNetworkEnabled) {
@@ -95,11 +92,11 @@ public class LocationTracker extends Service implements LocationListener {
 	}
 
 	public void onProviderDisabled(String provider) {
-		Log.i("Location", "Disabled: " + provider);
+		//addListeners();
 	}
 
 	public void onProviderEnabled(String provider) {
-		Log.i("Location", "Enabled: " + provider);
+		//addListeners();
 	}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {

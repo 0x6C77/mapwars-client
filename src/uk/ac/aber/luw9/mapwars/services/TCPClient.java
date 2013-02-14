@@ -26,13 +26,12 @@ public class TCPClient implements Runnable {
 	
 	private static final String SERVER_IP = "178.17.41.167";
 	private static final int SERVER_PORT = 4565;
-	private static final int TIMEOUT = 10000;
 	private ArrayBlockingQueue<String> messageQueue = new ArrayBlockingQueue<String>(100);
 	private static MainController mainController;
 	private boolean threadRunning;
 	private ScheduledExecutorService exec;
 
-	private Socket socket = new Socket();
+	private Socket socket;
 	private InetSocketAddress socketAddress = new InetSocketAddress(SERVER_IP, SERVER_PORT);
 	
 	public TCPClient() {
@@ -47,34 +46,24 @@ public class TCPClient implements Runnable {
 		if (!threadRunning) {
 			startThread();
 		}
-		
-		
+
 		// THREAD THIS NOEW!!!!!
+		checkSocket();
 		try {
-			if (!socket.isConnected()) {
-				socket.connect(socketAddress, TIMEOUT);
-			}
 			PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-			out.println(message);		
-			
-			Log.d("TCP", "C: Sent " + message);
-		} catch (Exception e) {
-			
+			out.println(message);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
+		Log.d("TCP", "C: Sent " + message);
 	}
 	
 	public void startThread() {
 		if (!threadRunning) {
 			threadRunning = true;
-			try {
-				socket.connect(socketAddress, TIMEOUT);
-			} catch (UnknownHostException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			checkSocket();
 			
 			exec = Executors.newSingleThreadScheduledExecutor();
 			exec.scheduleAtFixedRate(this, 0, 100, TimeUnit.MILLISECONDS);
@@ -97,11 +86,13 @@ public class TCPClient implements Runnable {
 		  @Override
 		  public void handleMessage(Message msg) {
 			try {
-				Log.d("TCP", "C: Recieved " + msg.obj);
-
-				JSONObject response = new JSONObject((String)msg.obj);
-				if (mainController != null)
-					mainController.handleTCPReply(response);
+				if (msg.obj != null) {
+					Log.d("TCP", "C: Recieved " + msg.obj);
+	
+					JSONObject response = new JSONObject((String)msg.obj);
+					if (mainController != null)
+						mainController.handleTCPReply(response);
+				}
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -111,26 +102,32 @@ public class TCPClient implements Runnable {
 
 			super.handleMessage(msg);
 		  }
-		};
+	};
 		
 	public void run() {
+		checkSocket();
+
 		try {
-	    	 if (!socket.isConnected()) {
-	    		 socket.connect(socketAddress, TIMEOUT);
-	    	 }
-
-	    	 try {
-	    		 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                 Message msg = Message.obtain();
-                 msg.obj = in.readLine();
-                 handler.sendMessage(msg);
-             } catch(Exception e) {
-            	 Log.e("TCP", "S: Error", e);
-             }
-	    	 //socket.close();
-         } catch (Exception e) {
-        	 Log.e("TCP", "C: Error", e);
-         }
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		
+			Message msg = Message.obtain();
+			msg.obj = in.readLine();
+			handler.sendMessage(msg);
+		} catch(Exception e) {
+			Log.e("TCP", "S: Error");
+		}
     }     
+	
+	public void checkSocket() {
+		try {
+			if (socket == null || socket.isClosed()) {
+				socket = new Socket();
+			}
+			if (!socket.isConnected()) {
+				socket.connect(socketAddress);
+			}
+        } catch (Exception e) {
+       	 Log.e("TCP", "C: Error", e);
+        }
+	}
 }

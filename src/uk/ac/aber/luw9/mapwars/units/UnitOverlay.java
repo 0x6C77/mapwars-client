@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.MapView.Projection;
 import org.osmdroid.views.overlay.Overlay;
 
 import uk.ac.aber.luw9.mapwars.GameMap;
@@ -14,7 +15,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.location.Location;
@@ -101,7 +101,7 @@ public class UnitOverlay extends Overlay {
 		return false;
 	}
 	
-	/*@Override
+/*	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
 		Log.i("UnitOverlayTouch",  event.toString());
 		
@@ -120,8 +120,8 @@ public class UnitOverlay extends Overlay {
 		}
 		
 		return true;
-	}*/
-
+	}
+*/
 	@Override
     public void draw(Canvas canvas, MapView mapView, boolean shadow) {
        // super.draw(canvas, mapView, shadow);
@@ -153,10 +153,15 @@ public class UnitOverlay extends Overlay {
 	        Log.i("UnitOverlay", "Drawing [" + point.x + "," + point.y + "]");
 	        canvas.drawBitmap(tOverlay, point.x, point.y, null);
         }
-	    
 
+	    if (!units.isEmpty()) {
+		    Unit unit = units.get(0);
+		    
+		    mapView.getProjection().toPixels(unit.getLocation(), point);
+		    Log.i("UnitOverlaySelect", point.x + " | " + unitSelectionStartX);
+	    }
 	    
-	  //if (unitSelectionDone) {
+//	  if (unitSelectionDone) {
 //		Log.i("UnitOverlayDraw", String.valueOf(unitSelectionStartX));
 //		Log.i("UnitOverlayDraw", String.valueOf(unitSelectionEndX));
 //		 Paint   mPaint = new Paint();
@@ -166,9 +171,11 @@ public class UnitOverlay extends Overlay {
 //	        mPaint.setStrokeJoin(Paint.Join.ROUND);
 //	        mPaint.setStrokeCap(Paint.Cap.ROUND);
 //	        mPaint.setStrokeWidth(2);
-//        //canvas.drawRect(unitSelectionStartX, unitSelectionStartY, unitSelectionEndX, unitSelectionEndY, paint);
-//	        Log.i("UnitOverlayDraw", "RECT MOTHER UFKCER");
-//	    canvas.drawRect(50, 50, 600, 600, mPaint);
-	//}
+//	        
+//	        Path path = new Path();
+//	        
+//	        path.moveTo(unitSelectionStartX, unitSelectionStartY);
+//	        path.lineTo(unitSelectionEndX, unitSelectionEndY);
+//	}
     }
 }

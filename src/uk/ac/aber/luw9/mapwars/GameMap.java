@@ -10,6 +10,7 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 
 import uk.ac.aber.luw9.mapwars.controllers.GameMapController;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -192,5 +193,10 @@ public class GameMap extends MapActivity {
 			trackLocation.setImageResource(R.drawable.location_green);
 		else
 			trackLocation.setImageResource(R.drawable.location_white);
+	}
+	
+	public void showLocationSettings() {
+		Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+		startActivity(intent);
 	}
 }
