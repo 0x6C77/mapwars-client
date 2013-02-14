@@ -24,7 +24,7 @@ public class GameMapController implements OnClickListener, MapListener {
 	private LocationTracker locationTracker;
 	private InternetService internetService;
 	private UnitController unitController;
-	private boolean trackUserLocation;
+	private boolean trackUserLocation, selectBox;
 
 	public GameMapController(GameMap map) {
 		this.gameMap = map;
@@ -95,6 +95,10 @@ public class GameMapController implements OnClickListener, MapListener {
     			loc = locationTracker.getLocation();
     			Log.i("GameMapController", loc.toString());
     			internetService.createUnit(UnitType.USER, loc);
+    			break;
+    		case R.id.selectToggleButton:
+    			selectBox = !selectBox;
+    			gameMap.toggleSelectButton(selectBox);
     			break;
 		}
 	}

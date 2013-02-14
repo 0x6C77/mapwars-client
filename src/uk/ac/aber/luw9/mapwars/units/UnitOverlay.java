@@ -29,6 +29,7 @@ public class UnitOverlay extends Overlay {
 	private int UNIT_RADIUS = 25;
 	private boolean unitSelecting;
 	private Point unitSelectionStart = new Point(), unitSelectionEnd = new Point();
+	private Boolean selectBox = false;
 	
 	public UnitOverlay(UnitController controller, GameMap map) {
 		super(map.getApplicationContext());
@@ -102,53 +103,56 @@ public class UnitOverlay extends Overlay {
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
-		Log.i("UnitOverlayTouch",  event.toString());
-		
-		int tmpX = Math.round(event.getX());
-		int tmpY = Math.round(event.getY());
-		
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			mapView.getProjection().fromMapPixels(tmpX, tmpY, unitSelectionStart);
-		} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			mapView.getProjection().fromMapPixels(tmpX, tmpY, unitSelectionEnd);
-			unitSelecting = true;
-			mapView.invalidate();
-		} else if (event.getAction() == MotionEvent.ACTION_UP) {
-			unitSelecting = false;
+		if (selectBox) {
+			Log.i("UnitOverlayTouch",  event.toString());
 			
+			int tmpX = Math.round(event.getX());
+			int tmpY = Math.round(event.getY());
 			
-			//look for units within this range
-			ArrayList<Unit> units = unitController.getUnits(true);
-			
-		    for (Unit unit : units) {
-		    	
-		    	GeoPoint unitPoint = unit.getLocation();
-	 
-		        Location unitLocation = new Location("point A");
-		        unitLocation.setLatitude(unitPoint.getLatitudeE6() / 1E6);
-		        unitLocation.setLongitude(unitPoint.getLongitudeE6() / 1E6);
-		        
-		        double distance = tapLocation.distanceTo(unitLocation);
-		        
-		        Log.i("UnitOverlayTap", String.valueOf(distance));
-		        
-		        if (distance < TAP_RADIUS) {
-			    	//If the unit is already selected, unselect
-			    	if (unit.isSelected()) {
-				    	unit.unselect();
-				    	unitsSelected.remove(unit);
-			        } else {
-			        	unit.select();
-			        	unitsSelected.add(unit);
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				mapView.getProjection().fromMapPixels(tmpX, tmpY, unitSelectionStart);
+			} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+				mapView.getProjection().fromMapPixels(tmpX, tmpY, unitSelectionEnd);
+				unitSelecting = true;
+				mapView.invalidate();
+			} else if (event.getAction() == MotionEvent.ACTION_UP) {
+				unitSelecting = false;
+				
+				
+				//look for units within this range
+				ArrayList<Unit> units = unitController.getUnits(true);
+				
+			    for (Unit unit : units) {
+			    	
+			    	GeoPoint unitPoint = unit.getLocation();
+	
+			    	Log.i("UnitOverlaySelect", unitPoint.toString());
+			    	Log.i("UnitOverlaySelect", unitSelectionStart.toString());
+			    	Log.i("UnitOverlaySelect", unitSelectionEnd.toString());
+			    	Log.i("UnitOverlaySelect", "----");
+			    	
+			        if (unitPoint.getLongitudeE6() > unitSelectionStart.y
+			        		&& unitPoint.getLongitudeE6() < unitSelectionEnd.y
+			        		&& unitPoint.getLatitudeE6() > unitSelectionStart.x
+			        		&& unitPoint.getLatitudeE6() < unitSelectionStart.x) {
+			        	
+						    	if (unit.isSelected()) {
+							    	unit.unselect();
+							    	unitsSelected.remove(unit);
+						        } else {
+						        	unit.select();
+						        	unitsSelected.add(unit);
+						        }
 			        }
-		        }
+				}
+				
+				mapView.invalidate();
 			}
 			
-			
-			mapView.invalidate();
+			return true;
+		} else {
+			return false;
 		}
-		
-		return true;
 	}
 	
 	@Override

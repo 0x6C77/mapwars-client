@@ -90,6 +90,7 @@ public class GameMap extends MapActivity {
 		findViewById(R.id.zoomOutButton).setOnClickListener(gameMapController);
 		findViewById(R.id.trackLocationButton).setOnClickListener(gameMapController);
 		findViewById(R.id.unitBuyButton).setOnClickListener(gameMapController);
+		findViewById(R.id.selectToggleButton).setOnClickListener(gameMapController);
 		
 		shopButton = (ImageView)findViewById(R.id.headerShopButton);
 		if (shopButton != null) {
@@ -190,9 +191,25 @@ public class GameMap extends MapActivity {
 	public void toggleTrackButton(boolean trackUserLocation) {
 		ImageView trackLocation = (ImageView)findViewById(R.id.trackLocationButton);
 		if (trackUserLocation)
-			trackLocation.setImageResource(R.drawable.location_green);
+			trackLocation.setImageResource(R.drawable.gps_green);
 		else
-			trackLocation.setImageResource(R.drawable.location_white);
+			trackLocation.setImageResource(R.drawable.gps_white);
+	}
+	
+	public void toggleSelectButton(boolean boxSelection) {
+		ImageView selectBoxButton = (ImageView)findViewById(R.id.selectBox);
+		ImageView selectHandButton = (ImageView)findViewById(R.id.selectHand);
+		if (boxSelection) {
+			selectBoxButton.setImageResource(R.drawable.box_green);
+			selectBoxButton.setBackgroundColor(0xFF000000);
+			selectHandButton.setImageResource(R.drawable.hand_white);
+			selectHandButton.setBackgroundColor(0x00000000);
+		} else {
+			selectBoxButton.setImageResource(R.drawable.box_white);
+			selectBoxButton.setBackgroundColor(0x00000000);
+			selectHandButton.setImageResource(R.drawable.hand_green);
+			selectHandButton.setBackgroundColor(0xFF000000);
+		}
 	}
 	
 	public void showLocationSettings() {

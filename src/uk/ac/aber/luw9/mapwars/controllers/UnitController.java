@@ -25,7 +25,7 @@ public class UnitController implements Runnable {
 	private ScheduledExecutorService exec;
 	private Boolean threadRunning = false;
 	private GameMap map;
-	
+
 	public UnitController(GameMap map) {
 		this.map = map;
 		unitOverlay = new UnitOverlay(this, map);
