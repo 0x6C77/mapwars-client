@@ -4,12 +4,14 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-    
-	<org.osmdroid.views.MapView android:id="@+id/map"
-        android:layout_width="fill_parent" android:layout_height="fill_parent" />
 
-	<include layout="@layout/map_header"/>
+    <org.osmdroid.views.MapView
+        android:id="@+id/map"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
 
-    <include layout="@layout/map_controls"/>
-    
+    <include layout="@layout/map_header" />
+
+    <include layout="@layout/map_controls" />
+
 </RelativeLayout>

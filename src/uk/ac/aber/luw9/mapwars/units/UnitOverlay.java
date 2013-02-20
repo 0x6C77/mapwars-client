@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.location.Location;
@@ -29,7 +30,7 @@ public class UnitOverlay extends Overlay {
 	private int UNIT_RADIUS = 25;
 	private boolean unitSelecting;
 	private Point unitSelectionStart = new Point(), unitSelectionEnd = new Point();
-	private Boolean selectBox = false;
+	private Boolean selectMethodBox = false;
 	
 	public UnitOverlay(UnitController controller, GameMap map) {
 		super(map.getApplicationContext());
@@ -85,7 +86,7 @@ public class UnitOverlay extends Overlay {
 			//move selected units to location
 			for (Unit unit : unitsSelected) {
 				unit.unselect();
-				unitController.moveUnit(unit.getId(), tapPoint, true);
+				unitController.moveVehicle(unit.getId(), tapPoint, true);
 			}
 			unitsSelected.clear();
 	    }
@@ -103,9 +104,8 @@ public class UnitOverlay extends Overlay {
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
-		if (selectBox) {
+		if (selectMethodBox) {
 			Log.i("UnitOverlayTouch",  event.toString());
-			
 			int tmpX = Math.round(event.getX());
 			int tmpY = Math.round(event.getY());
 			
@@ -118,23 +118,17 @@ public class UnitOverlay extends Overlay {
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				unitSelecting = false;
 				
-				
 				//look for units within this range
 				ArrayList<Unit> units = unitController.getUnits(true);
 				
 			    for (Unit unit : units) {
+			    	Point unitPoint = new Point();
+			    	mapView.getProjection().toMapPixels(unit.getLocation(), unitPoint);
 			    	
-			    	GeoPoint unitPoint = unit.getLocation();
-	
-			    	Log.i("UnitOverlaySelect", unitPoint.toString());
-			    	Log.i("UnitOverlaySelect", unitSelectionStart.toString());
-			    	Log.i("UnitOverlaySelect", unitSelectionEnd.toString());
-			    	Log.i("UnitOverlaySelect", "----");
-			    	
-			        if (unitPoint.getLongitudeE6() > unitSelectionStart.y
-			        		&& unitPoint.getLongitudeE6() < unitSelectionEnd.y
-			        		&& unitPoint.getLatitudeE6() > unitSelectionStart.x
-			        		&& unitPoint.getLatitudeE6() < unitSelectionStart.x) {
+			        if (unitPoint.x > unitSelectionStart.x
+			        		&& unitPoint.x < unitSelectionEnd.x
+			        		&& unitPoint.y > unitSelectionStart.y
+			        		&& unitPoint.y < unitSelectionEnd.y) {
 			        	
 						    	if (unit.isSelected()) {
 							    	unit.unselect();
@@ -145,7 +139,7 @@ public class UnitOverlay extends Overlay {
 						        }
 			        }
 				}
-				
+			    
 				mapView.invalidate();
 			}
 			
@@ -171,10 +165,11 @@ public class UnitOverlay extends Overlay {
 		uOverlay = Bitmap.createScaledBitmap(overlay_user, radius, radius, false);
 		eOverlay = Bitmap.createScaledBitmap(overlay_enemy, radius, radius, false);
 
-        ArrayList<Unit> units = unitController.getUnits();
+        ArrayList<Unit> units = unitController.getUnits(false, UnitType.VEHICLE);
 	    for (Unit unit : units) {
+	    	Vehicle vehicle = (Vehicle) unit;
 	    	mapView.getProjection().toPixels(unit.getLocation(), point);
-	    	if (unit.getType() == UnitType.USER) {
+	    	if (vehicle.getVehicleType() == VehicleType.USER) {
 	        	if (unit.isSelected()) {
 	        		tOverlay = usOverlay;
 	        	} else {
@@ -183,8 +178,12 @@ public class UnitOverlay extends Overlay {
 	    	} else {
 	    		tOverlay = eOverlay;
 	    	}
-	        Log.i("UnitOverlay", "Drawing [" + point.x + "," + point.y + "]");
-	        canvas.drawBitmap(tOverlay, point.x, point.y, null);
+
+
+	        Matrix mat = new Matrix();
+	        mat.setTranslate(point.x - (radius/2), point.y - (radius/2));
+	        mat.postRotate(vehicle.getBearing(), point.x, point.y);
+	        canvas.drawBitmap(tOverlay, mat, null);
         }
 
 	    if (!units.isEmpty()) {
@@ -194,7 +193,7 @@ public class UnitOverlay extends Overlay {
 	    }
 	    
 		if (unitSelecting) {
-			Paint   mPaint = new Paint();
+			Paint mPaint = new Paint();
 			mPaint.setDither(true);
 			mPaint.setColor(Color.RED);
 			mPaint.setStyle(Paint.Style.STROKE);
@@ -205,4 +204,8 @@ public class UnitOverlay extends Overlay {
 			canvas.drawRect(unitSelectionStart.x, unitSelectionStart.y, unitSelectionEnd.x, unitSelectionEnd.y, mPaint);
 		}
     }
+
+	public void toggleSelectMethod(boolean selectBox) {
+		selectMethodBox = selectBox;
+	}
 }

@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
 import uk.ac.aber.luw9.mapwars.units.UnitType;
+import uk.ac.aber.luw9.mapwars.units.VehicleType;
 import android.content.Context;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -92,7 +93,6 @@ public class InternetService {
         try {
         	jsonObject.put("action", "unit.create");
 			jsonObject.put("user", user);
-			jsonObject.put("type", type.toString());
 	        jsonObject.put("lat", loc.getLatitude());
 	        jsonObject.put("lon", loc.getLongitude());
 			tcpClient.sendMessage(jsonObject.toString());

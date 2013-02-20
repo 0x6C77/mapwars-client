@@ -2,8 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:scrollbarAlwaysDrawVerticalTrack="false"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:scrollbarAlwaysDrawVerticalTrack="false" >
 
     <ScrollView
         android:id="@+id/scrollView1"
@@ -15,37 +15,39 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:padding="20dp"
-        	android:background="@drawable/mainrepeat"
-            android:orientation="vertical" >
+            android:background="@drawable/mainrepeat"
+            android:orientation="vertical"
+            android:padding="20dp" >
 
             <ImageView
                 android:id="@+id/imageView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
                 android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="30dp"
                 android:src="@drawable/logo" />
 
-   <!--         <TextView
+            <!--
+                <TextView
                 android:id="@+id/login_error"
                 android:layout_width="wrap_content"
                 android:layout_height="0px"
                 android:layout_marginBottom="10dp"
                 android:text="@string/home_login_error"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="#FF0000" /> -->
-            
+                android:textColor="#FF0000" />
+            -->
+
             <EditText
-                style="@style/DefaultInput"
                 android:id="@+id/login_user"
+                style="@style/DefaultInput"
                 android:hint="@string/username" />
 
             <EditText
-                style="@style/DefaultInput"
                 android:id="@+id/login_pass"
-                android:hint="@string/password"
+                style="@style/DefaultInput"
                 android:layout_marginBottom="10dp"
+                android:hint="@string/password"
                 android:inputType="textPassword" />
 
             <Button
@@ -71,26 +73,26 @@
                 android:text="@string/home_register_info" />
 
             <EditText
-                style="@style/DefaultInput"
                 android:id="@+id/reg_username"
+                style="@style/DefaultInput"
                 android:hint="@string/username" />
 
             <EditText
-                style="@style/DefaultInput"
                 android:id="@+id/reg_email"
-                android:hint="Email address" />
+                style="@style/DefaultInput"
+                android:hint="@string/email" />
 
             <EditText
-                style="@style/DefaultInput"
                 android:id="@+id/reg_pass"
+                style="@style/DefaultInput"
                 android:hint="@string/password"
                 android:inputType="textPassword" />
 
             <EditText
-                style="@style/DefaultInput"
                 android:id="@+id/reg_pass_2"
-                android:hint="@string/password"
+                style="@style/DefaultInput"
                 android:layout_marginBottom="10dp"
+                android:hint="@string/password"
                 android:inputType="textPassword" />
 
             <Button
@@ -100,9 +102,7 @@
                 android:layout_gravity="right"
                 android:layout_marginBottom="20dp"
                 android:text="@string/home_register_button" />
-
         </LinearLayout>
-
     </ScrollView>
 
 </RelativeLayout>

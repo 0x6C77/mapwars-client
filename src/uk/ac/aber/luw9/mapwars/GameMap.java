@@ -35,7 +35,7 @@ public class GameMap extends MapActivity {
     private TextView loadingText;
     private ArrayList<Overlay> tmpOverlays = new ArrayList<Overlay>();
 
-    
+
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,13 +60,13 @@ public class GameMap extends MapActivity {
 	}
 	
 	 public void setupComplete() {
-	 	setContentView(R.layout.map);
+	 	setContentView(R.layout.map); 
 	 
 		mapView = (MapView) findViewById(R.id.map);
 		mapView.setBuiltInZoomControls(false);
 		
-		//XYTileSource tileSource = new XYTileSource("SomeName", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-wpji9msa/");
-		XYTileSource tileSource = new XYTileSource("v2", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-dq73ewie/");
+		XYTileSource tileSource = new XYTileSource("Meow", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-wpji9msa/");
+		//XYTileSource tileSource = new XYTileSource("v2", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-dq73ewie/");
 		
 		mapView.setTileSource(tileSource);
 		
@@ -186,14 +186,6 @@ public class GameMap extends MapActivity {
 	public void onLocationChanged(Location pLoc) {
 		// TODO Auto-generated method stub
 		
-	}
-
-	public void toggleTrackButton(boolean trackUserLocation) {
-		ImageView trackLocation = (ImageView)findViewById(R.id.trackLocationButton);
-		if (trackUserLocation)
-			trackLocation.setImageResource(R.drawable.gps_green);
-		else
-			trackLocation.setImageResource(R.drawable.gps_white);
 	}
 	
 	public void toggleSelectButton(boolean boxSelection) {

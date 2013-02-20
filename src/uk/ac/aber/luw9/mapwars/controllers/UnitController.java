@@ -15,11 +15,13 @@ import uk.ac.aber.luw9.mapwars.Utils;
 import uk.ac.aber.luw9.mapwars.units.Unit;
 import uk.ac.aber.luw9.mapwars.units.UnitOverlay;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
+import uk.ac.aber.luw9.mapwars.units.Vehicle;
+import uk.ac.aber.luw9.mapwars.units.VehicleType;
 import android.location.Location;
 import android.util.Log;
 
 public class UnitController implements Runnable {
-	private ArrayList<Unit> units = new ArrayList<Unit>();
+	private ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
 	private UnitOverlay unitOverlay;
 	private MainController mainController;
 	private ScheduledExecutorService exec;
@@ -37,34 +39,46 @@ public class UnitController implements Runnable {
 	}
 	
 	public ArrayList<Unit> getUnits(boolean user) {
-		if (!user) {
-			return units;
-		} else {
-			//find users units
-			ArrayList<Unit> usersUnits = new ArrayList<Unit>();
-			for (Unit unit : units) {
-				if (unit.getOwner().equals(mainController.getUser())) {
-					usersUnits.add(unit);
-				}
-			}		
-			return usersUnits;
-		}
+		return getUnits(false, null);
 	}
 	
-	public boolean addUnit(Unit unit) {
-		units.add(unit);
+	public ArrayList<Unit> getUnits(boolean user, UnitType type) {
+		//if (type == UnitType.VEHICLE) {
+			if (!user) {
+				ArrayList<Unit> usersVehicles = new ArrayList<Unit>();
+				for (Vehicle vehicle : vehicles) {
+					usersVehicles.add(vehicle);
+				}	
+				return usersVehicles;
+			} else {
+				//find users units
+				ArrayList<Unit> usersVehicles = new ArrayList<Unit>();
+				for (Vehicle vehicle : vehicles) {
+					if (vehicle.getOwner().equals(mainController.getUser())) {
+						usersVehicles.add(vehicle);
+					}
+				}		
+				return usersVehicles;
+			}
+		//}
 		
-		if (!threadRunning) {
-			threadRunning = true;
-			exec = Executors.newSingleThreadScheduledExecutor();
-			exec.scheduleAtFixedRate(this, 0, 20, TimeUnit.MILLISECONDS);
+		//return null;
+	}
+	
+	public void addUnit(Unit unit, UnitType type) {
+		if (type == UnitType.VEHICLE) {
+			vehicles.add((Vehicle) unit);
+			
+			if (!threadRunning) {
+				threadRunning = true;
+				exec = Executors.newSingleThreadScheduledExecutor();
+				exec.scheduleAtFixedRate(this, 0, 20, TimeUnit.MILLISECONDS);
+			}
 		}
-		
-		return true;
 	}
 	
 	public boolean unitExists(String id) {
-		for (Unit unit : units) {
+		for (Unit unit : vehicles) {
 			if (unit.getId().equals(id)) {
 				return true;
 			}
@@ -72,41 +86,41 @@ public class UnitController implements Runnable {
 		return false;
 	}
 
-	public void moveUnit(String id, GeoPoint pt, boolean report) {
-		for (Unit unit : units) {
-			if (unit.getId().equals(id)) {
-				unit.setTargetLocation(pt);
+	public void moveVehicle(String id, GeoPoint pt, boolean report) {
+		for (Vehicle vehicle : vehicles) {
+			if (vehicle.getId().equals(id)) {
+				vehicle.setTargetLocation(pt);
 				if (report) {
-					mainController.getInternetService().moveUnit(unit.getId(), pt);
+					mainController.getInternetService().moveUnit(vehicle.getId(), pt);
 				}
 				break;
 			}
 		}
 	}
 	
-	public void updateUnitLocation(String id, String owner, GeoPoint pt) {
+	public void updateVehicleLocation(String id, String owner, GeoPoint pt) {
  		if (unitExists(id)) {
  			//only update other users locations, our local copy is probably more up to date
- 			if (!owner.equals(mainController.getUser())) {
- 				moveUnit(id, pt, false);
- 			}
+			moveVehicle(id, pt, false);
  		} else {
  			Log.i("UnitController", "Adding unit " + id + " [" + owner + "," + mainController.getUser() + "]");
  			Unit tmpUnit;
  			if (owner.equals(mainController.getUser())) {
- 				tmpUnit = new Unit(id, owner, UnitType.USER, pt);
+ 				tmpUnit = new Vehicle(id, owner, VehicleType.USER, pt);
  			} else {
- 				tmpUnit = new Unit(id, owner, UnitType.ENEMY, pt);
+ 				tmpUnit = new Vehicle(id, owner, VehicleType.ENEMY, pt);
  			}
- 			addUnit(tmpUnit);
+ 			addUnit(tmpUnit, UnitType.VEHICLE);
  		}
 	}
 	
 	public void handleUpdates(JSONObject json) throws JSONException {
 		//get each user listed and pass them to GameMapController
+		//JSONObject units = json.getJSONObject("units");
+		//JSONArray vehicles = units.getJSONArray("vehicles");
 		JSONArray units = json.getJSONArray("units");
 		for (int i = 0 ; i < units.length(); i++){
-			Log.i("UnitController", units.getString(i));
+			Log.i("UnitControllerUpdate", units.getString(i));
 			JSONObject unit = new JSONObject(units.getString(i));
 			String id = unit.getString("id");
 			String owner = unit.getString("user");
@@ -115,7 +129,7 @@ public class UnitController implements Runnable {
 			
 			GeoPoint pt = Utils.createGeoPoint(Double.valueOf(lat), Double.valueOf(lon));
 			
-			updateUnitLocation(id, owner, pt);
+			updateVehicleLocation(id, owner, pt);
 		}
 		
 		mainController.redraw();
@@ -132,18 +146,19 @@ public class UnitController implements Runnable {
 		Location loc, tmpLoc;
 		boolean unitsMoved = false;
 		
-		for (Unit unit : units) {
-			pt = unit.getLocation();
-			tmpPt = unit.getTargetLocation();
+		for (Vehicle vehicle : vehicles) {
+			pt = vehicle.getLocation();
+			tmpPt = vehicle.getTargetLocation();
 			
 			loc = Utils.createLocation(pt);
 			tmpLoc = Utils.createLocation(tmpPt);
 			
 			float distance = loc.distanceTo(tmpLoc);
 			
-			unit.setBearing(loc.bearingTo(tmpLoc));
-			
 			if (distance > 0) {
+				Log.i("UnitControllerMove", String.valueOf(distance));
+				vehicle.setBearing(loc.bearingTo(tmpLoc));
+				
 				int iStages = (int) Math.round(distance / 0.4);
 
 		        int newLat = pt.getLatitudeE6() + ((tmpPt.getLatitudeE6() - pt.getLatitudeE6()) / iStages);
@@ -151,14 +166,19 @@ public class UnitController implements Runnable {
 		        
 				pt.setLatitudeE6(newLat);
 				pt.setLongitudeE6(newLon);
-				unit.setLocation(pt);
+				vehicle.setLocation(pt);
 				
 				unitsMoved = true;
 			}
 		}
 		
 		if (unitsMoved) {
+			Log.i("UnitController", "Something moved");
 			map.redraw();
 		}
+	}
+
+	public void toggleSelectMethod(boolean selectBox) {
+		unitOverlay.toggleSelectMethod(selectBox);
 	}
 }

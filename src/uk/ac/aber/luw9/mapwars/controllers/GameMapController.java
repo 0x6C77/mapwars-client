@@ -11,6 +11,7 @@ import uk.ac.aber.luw9.mapwars.R;
 import uk.ac.aber.luw9.mapwars.services.InternetService;
 import uk.ac.aber.luw9.mapwars.services.LocationTracker;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
+import uk.ac.aber.luw9.mapwars.units.VehicleType;
 import android.app.Activity;
 import android.location.Location;
 import android.util.Log;
@@ -24,7 +25,7 @@ public class GameMapController implements OnClickListener, MapListener {
 	private LocationTracker locationTracker;
 	private InternetService internetService;
 	private UnitController unitController;
-	private boolean trackUserLocation, selectBox;
+	private boolean selectBox;
 
 	public GameMapController(GameMap map) {
 		this.gameMap = map;
@@ -48,9 +49,6 @@ public class GameMapController implements OnClickListener, MapListener {
 
 	public void updateUserLocation(Location location) {
 		serviceOnline("Location");
-		
-		if (trackUserLocation)
-			gameMap.setUserLocation(location);
 		
 		internetService.updateLocation(location);
 	}
@@ -79,26 +77,30 @@ public class GameMapController implements OnClickListener, MapListener {
     			gameMap.zoomOut();
     			break;
     		case R.id.trackLocationButton:
-    			trackUserLocation = !trackUserLocation;
-    			gameMap.toggleTrackButton(trackUserLocation);
-    			if (trackUserLocation) {
-    				loc = locationTracker.getLocation();
-    				gameMap.setUserLocation(loc);
-    			}
+				loc = locationTracker.getLocation();
+				gameMap.setUserLocation(loc);
     			break;
     		case R.id.headerShopButton:
     			gameMap.toggleShop();
     			break;
-    		case R.id.unitBuyButton:
+    		case R.id.vehicleBuyButton:
     			gameMap.toggleShop();
     			//create unit
     			loc = locationTracker.getLocation();
     			Log.i("GameMapController", loc.toString());
-    			internetService.createUnit(UnitType.USER, loc);
+    			internetService.createUnit(UnitType.VEHICLE, loc);
+    			break;
+    		case R.id.defenceBuyButton:
+    			gameMap.toggleShop();
+    			//create unit
+    			loc = locationTracker.getLocation();
+    			Log.i("GameMapController", loc.toString());
+    			internetService.createUnit(UnitType.DEFENCE, loc);
     			break;
     		case R.id.selectToggleButton:
     			selectBox = !selectBox;
     			gameMap.toggleSelectButton(selectBox);
+    			unitController.toggleSelectMethod(selectBox);
     			break;
 		}
 	}
@@ -110,8 +112,6 @@ public class GameMapController implements OnClickListener, MapListener {
 	@Override
 	public boolean onScroll(ScrollEvent arg0) {
 		Log.i("GameMapScroll", arg0.toString());
-		trackUserLocation = false;
-		gameMap.toggleTrackButton(trackUserLocation);
 		
 		return false;
 	}

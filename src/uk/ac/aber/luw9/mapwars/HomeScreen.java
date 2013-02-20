@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.provider.SyncStateContract.Constants;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;

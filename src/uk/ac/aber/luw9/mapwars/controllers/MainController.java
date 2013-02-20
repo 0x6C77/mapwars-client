@@ -81,7 +81,7 @@ public class MainController {
 	}
 
 	public void handleTCPReply(JSONObject json) throws JSONException {
-		Log.i("tcp", json.toString());
+		//Log.i("tcp", json.toString());
 		
 		String action = json.getString("action");
 		if (action.equals("login")) {
