@@ -95,6 +95,7 @@ public class InternetService {
 			jsonObject.put("user", user);
 	        jsonObject.put("lat", loc.getLatitude());
 	        jsonObject.put("lon", loc.getLongitude());
+	        jsonObject.put("type", type);
 			tcpClient.sendMessage(jsonObject.toString());
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
