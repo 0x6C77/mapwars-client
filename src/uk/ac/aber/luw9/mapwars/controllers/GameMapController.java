@@ -11,7 +11,6 @@ import uk.ac.aber.luw9.mapwars.R;
 import uk.ac.aber.luw9.mapwars.services.InternetService;
 import uk.ac.aber.luw9.mapwars.services.LocationTracker;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
-import uk.ac.aber.luw9.mapwars.units.VehicleType;
 import android.app.Activity;
 import android.location.Location;
 import android.util.Log;

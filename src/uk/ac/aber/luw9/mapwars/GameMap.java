@@ -90,6 +90,7 @@ public class GameMap extends MapActivity {
 		findViewById(R.id.zoomOutButton).setOnClickListener(gameMapController);
 		findViewById(R.id.trackLocationButton).setOnClickListener(gameMapController);
 		findViewById(R.id.vehicleBuyButton).setOnClickListener(gameMapController);
+		findViewById(R.id.defenceBuyButton).setOnClickListener(gameMapController);
 		findViewById(R.id.selectToggleButton).setOnClickListener(gameMapController);
 		
 		shopButton = (ImageView)findViewById(R.id.headerShopButton);

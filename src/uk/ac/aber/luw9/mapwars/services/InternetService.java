@@ -5,7 +5,6 @@ import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
 import uk.ac.aber.luw9.mapwars.units.UnitType;
-import uk.ac.aber.luw9.mapwars.units.VehicleType;
 import android.content.Context;
 import android.location.Location;
 import android.net.ConnectivityManager;

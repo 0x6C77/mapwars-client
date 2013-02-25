@@ -33,10 +33,20 @@
         android:visibility="invisible" >
 
         <ImageButton
-            android:id="@+id/unitBuyButton"
+            android:id="@+id/vehicleBuyButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/unit_buy" />
+        <ImageButton
+            android:id="@+id/buildingBuyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/building_buy" />
+        <ImageButton
+            android:id="@+id/defenceBuyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/defense_buy" />
     </LinearLayout>
 
 </LinearLayout>

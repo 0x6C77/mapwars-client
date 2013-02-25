@@ -8,6 +8,7 @@ public abstract class Unit {
 	private GeoPoint location;
 	private UnitType type;
 	private boolean selected;
+	private float bearing;
 	
 	public Unit(String id, String owner, UnitType type, GeoPoint location) {
 		this.id = id;
@@ -45,7 +46,26 @@ public abstract class Unit {
 	}
 	
 	public String getOwner() {
+		if (owner == null)
+			return "You";
 		return owner;
+	}
+	
+	public boolean amOwner() {
+		return (owner == null);
+	}
+
+	public float getBearing() {
+		return bearing;
+	}
+	
+	public void setBearing(float bearing) {
+		this.bearing = bearing;
+	}
+	
+	@Override
+	public String toString() {
+		return this.type.toString() + " [" + this.owner + "]";
 	}
 
 }

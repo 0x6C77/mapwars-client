@@ -22,8 +22,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 public class UnitOverlay extends Overlay {
-	private Bitmap overlay_user, overlay_user_selected, overlay_enemy;
-    private Bitmap tOverlay, uOverlay, eOverlay, usOverlay;
+	private Bitmap overlay_tank_user, overlay_tank_user_selected, overlay_tank_enemy, overlay_defence_user, overlay_defence_enemy;
+    private Bitmap tOverlay, uOverlay, eOverlay, usOverlay, dOverlay, deOverlay;
 	private UnitController unitController;
 	private ArrayList<Unit> unitsSelected = new ArrayList<Unit>();
 	private int TAP_RADIUS = 20;
@@ -37,9 +37,11 @@ public class UnitOverlay extends Overlay {
 		this.unitController = controller;
 		map.addOverlay(this);
 		
-		overlay_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1);
-		overlay_user_selected = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1_selected);
-		overlay_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_2);
+		overlay_tank_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1);
+		overlay_tank_user_selected = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1_selected);
+		overlay_tank_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_2);
+		overlay_defence_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.defence_1);
+		overlay_defence_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.defence_2);
 	}
 	
 	public boolean onTap(float tapX, float tapY, MapView mapView) {
@@ -47,15 +49,14 @@ public class UnitOverlay extends Overlay {
         Location tapLocation = new Location("point B");
         tapLocation.setLatitude(tapPoint.getLatitudeE6() / 1E6);
         tapLocation.setLongitude(tapPoint.getLongitudeE6() / 1E6);
-		
+        
         //Track if a new unit has been selected this tap
         boolean newUnit = false;
        
 		//look for unit
 		ArrayList<Unit> units = unitController.getUnits(true);
 		
-	    for (Unit unit : units) {
-	    	
+	    for (Unit unit : units) {	    	
 	    	GeoPoint unitPoint = unit.getLocation();
  
 	        Location unitLocation = new Location("point A");
@@ -161,28 +162,38 @@ public class UnitOverlay extends Overlay {
         
         Point point = new Point();
         
-		usOverlay = Bitmap.createScaledBitmap(overlay_user_selected, radius, radius, false);
-		uOverlay = Bitmap.createScaledBitmap(overlay_user, radius, radius, false);
-		eOverlay = Bitmap.createScaledBitmap(overlay_enemy, radius, radius, false);
+		usOverlay = Bitmap.createScaledBitmap(overlay_tank_user_selected, radius, radius, false);
+		uOverlay = Bitmap.createScaledBitmap(overlay_tank_user, radius, radius, false);
+		eOverlay = Bitmap.createScaledBitmap(overlay_tank_enemy, radius, radius, false);
+		dOverlay = Bitmap.createScaledBitmap(overlay_defence_user, radius, radius, false);
+		deOverlay = Bitmap.createScaledBitmap(overlay_defence_enemy, radius, radius, false);
 
         ArrayList<Unit> units = unitController.getUnits(false, UnitType.VEHICLE);
 	    for (Unit unit : units) {
-	    	Vehicle vehicle = (Vehicle) unit;
 	    	mapView.getProjection().toPixels(unit.getLocation(), point);
-	    	if (vehicle.getVehicleType() == VehicleType.USER) {
-	        	if (unit.isSelected()) {
-	        		tOverlay = usOverlay;
-	        	} else {
-	        		tOverlay = uOverlay;
-	        	}
-	    	} else {
-	    		tOverlay = eOverlay;
+	    	Log.i("UnitDraw", unit.toString());
+	    	if (unit.getType() == UnitType.VEHICLE) {
+	    		if (unit.amOwner()) {
+		        	if (unit.isSelected()) {
+		        		tOverlay = usOverlay;
+		        	} else {
+		        		tOverlay = uOverlay;
+		        	}
+		    	} else {
+		    		tOverlay = eOverlay;
+		    	}
+	    	} else if (unit.getType() == UnitType.DEFENCE) {
+	    		if (unit.amOwner()) {
+	    			tOverlay = dOverlay;
+	    		} else {
+    				tOverlay = deOverlay;	
+    			}
 	    	}
 
 
 	        Matrix mat = new Matrix();
 	        mat.setTranslate(point.x - (radius/2), point.y - (radius/2));
-	        mat.postRotate(vehicle.getBearing(), point.x, point.y);
+	        mat.postRotate(unit.getBearing(), point.x, point.y);
 	        canvas.drawBitmap(tOverlay, mat, null);
         }
 
