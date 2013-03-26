@@ -43,48 +43,39 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		if (!isGPSEnabled && !isNetworkEnabled) {
 			Log.i("Location", "No locations");
+			gameMapController.serviceUnavailable("location");
         } else {
-            // First get location from Network Provider
-            //if (isNetworkEnabled) {
-                locationManager.requestLocationUpdates(
-                        LocationManager.NETWORK_PROVIDER,
-                        MIN_TIME,
-                        MIN_DISTANCE, this);
-                
-                Log.i("Location", "Network enabled");
-                if (locationManager != null) {
-                	currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                }
-           //}
-            // if GPS Enabled get lat/long using GPS Services
-            /*if (isGPSEnabled) {
-                if (location == null) {*/
-                    locationManager.requestLocationUpdates(
-                            LocationManager.GPS_PROVIDER,
-                            MIN_TIME,
-                            MIN_DISTANCE, this);
-                    
-                    Log.i("Location", "GPS enabled");
-                    if (locationManager != null) {
-                    	currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    }
-              /*  }
-            }*/
+			locationManager.requestLocationUpdates(
+			        LocationManager.NETWORK_PROVIDER,
+			        MIN_TIME,
+			        MIN_DISTANCE, this);
+			
+			locationManager.requestLocationUpdates(
+			        LocationManager.GPS_PROVIDER,
+			        MIN_TIME,
+			        MIN_DISTANCE, this);
         }
 		
-		if (currentLocation != null)
+		currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		Location tmpLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		
+		if (tmpLocation != null && isBetterLocation(tmpLocation, currentLocation))
+			currentLocation = tmpLocation;
+		
+		if (currentLocation != null) {
+			Log.i("Location", currentLocation.toString());
 			gameMapController.updateUserLocation(currentLocation);
+		} else {
+			gameMapController.serviceUnavailable("location");
+		}
 	}
 	
 	
 	public void onLocationChanged(Location location) {
 		boolean isBetter = isBetterLocation(location, currentLocation);
-		
-		//compare accuracy against previous position
 		Log.i("Location", "Location: " + location.toString());
-		//Utils.appendLog("Location (" + isBetter + "): " + location.toString());
 		
-		if (isBetter && gameMapController != null) {
+		if (isBetter) {
 			currentLocation = location;
 			gameMapController.updateUserLocation(currentLocation);
 		}
@@ -146,7 +137,7 @@ public class LocationTracker extends Service implements LocationListener {
 	
 	private boolean isSameProvider(String provider1, String provider2) {
 	    if (provider1 == null) {
-	      return provider2 == null;
+	    	return provider2 == null;
 	    }
 	    return provider1.equals(provider2);
 	}

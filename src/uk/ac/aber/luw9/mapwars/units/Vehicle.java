@@ -8,7 +8,7 @@ public class Vehicle extends Unit {
 
 	private GeoPoint location, targetLocation;
 	
-	public Vehicle(String id, String owner, GeoPoint location) {
+	public Vehicle(int id, int owner, GeoPoint location) {
 		super(id, owner, UnitType.VEHICLE, location);
 		this.targetLocation = location;
 	}

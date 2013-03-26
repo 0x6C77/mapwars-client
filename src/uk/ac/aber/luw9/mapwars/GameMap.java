@@ -45,6 +45,9 @@ public class GameMap extends MapActivity {
         loadingText = (TextView)findViewById(R.id.loadingText);
         
         gameMapController = new GameMapController(this);
+        
+        if (loaded)
+        	setupComplete();
      }
 	
 	public void serviceOnline(String service) {
@@ -54,9 +57,15 @@ public class GameMap extends MapActivity {
 			loadedCount++;
 			if (loadedCount == 2) {
 				loaded = true;
-				setupComplete();
+				if (gameMapController != null)
+					setupComplete();
 			}
 		}
+	}
+
+
+	public void serviceUnavailable(String service) {
+		
 	}
 	
 	 public void setupComplete() {
@@ -84,6 +93,9 @@ public class GameMap extends MapActivity {
 		mapViewController.setZoom(17);
 		
 		Location loc = gameMapController.getUserLocation();
+		
+		Log.i("location", loc.toString());
+		
 		mapViewController.setCenter(Utils.createGeoPoint(loc.getLatitude(), loc.getLongitude()));
 		
 		findViewById(R.id.zoomInButton).setOnClickListener(gameMapController);

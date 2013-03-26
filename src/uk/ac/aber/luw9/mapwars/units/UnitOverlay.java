@@ -171,7 +171,6 @@ public class UnitOverlay extends Overlay {
         ArrayList<Unit> units = unitController.getUnits(false, UnitType.VEHICLE);
 	    for (Unit unit : units) {
 	    	mapView.getProjection().toPixels(unit.getLocation(), point);
-	    	Log.i("UnitDraw", unit.toString());
 	    	if (unit.getType() == UnitType.VEHICLE) {
 	    		if (unit.amOwner()) {
 		        	if (unit.isSelected()) {

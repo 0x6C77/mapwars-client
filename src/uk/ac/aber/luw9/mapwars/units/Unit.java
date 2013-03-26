@@ -3,21 +3,22 @@ package uk.ac.aber.luw9.mapwars.units;
 import org.osmdroid.util.GeoPoint;
 
 public abstract class Unit {
-	private String id;
-	private String owner;
+	private int id;
+	private int owner;
 	private GeoPoint location;
 	private UnitType type;
 	private boolean selected;
 	private float bearing;
+	private int health;
 	
-	public Unit(String id, String owner, UnitType type, GeoPoint location) {
+	public Unit(int id, int owner, UnitType type, GeoPoint location) {
 		this.id = id;
 		this.owner = owner;
 		this.location = location;
 		this.type = type; 
 	}
 	
-	public String getId() {
+	public int getId() {
 		return id;
 	}
 	
@@ -45,14 +46,12 @@ public abstract class Unit {
 		return selected;
 	}
 	
-	public String getOwner() {
-		if (owner == null)
-			return "You";
+	public int getOwner() {
 		return owner;
 	}
 	
 	public boolean amOwner() {
-		return (owner == null);
+		return (owner == 0);
 	}
 
 	public float getBearing() {
@@ -66,6 +65,10 @@ public abstract class Unit {
 	@Override
 	public String toString() {
 		return this.type.toString() + " [" + this.owner + "]";
+	}
+
+	public void setHealth(int health) {
+		this.health = health;
 	}
 
 }

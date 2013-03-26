@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
+import uk.ac.aber.luw9.mapwars.User;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
 import android.content.Context;
 import android.location.Location;
@@ -14,7 +15,7 @@ public class InternetService {
 
 	Context context;
 	TCPClient tcpClient;
-	String user;
+	User user;
 	
 	public InternetService(Context context) {
 		this.context = context;
@@ -37,17 +38,26 @@ public class InternetService {
 		return isNetworkAvailable();
 	}
 	
-	public void setUser(String user) {
+	public void setUser(User user) {
 		this.user = user;
 	}
 
+	public boolean startThread() {
+		tcpClient.startThread();
+		return isNetworkAvailable();
+	}
+	
+	public void stopThread() {
+		tcpClient.stopThread();
+	}
+	
 	public boolean login(String user, String pass) {
 		if (!isNetworkAvailable())
 			return false;
 		
 		JSONObject jsonObject = new JSONObject();
         try {
-        	jsonObject.put("action", "login");
+        	jsonObject.put("action", "user.login");
 			jsonObject.put("user", user);
 	        jsonObject.put("pass", pass);
 			tcpClient.sendMessage(jsonObject.toString());
@@ -67,8 +77,9 @@ public class InternetService {
 		
 		JSONObject jsonObject = new JSONObject();
         try {
-        	jsonObject.put("action", "location");
-			jsonObject.put("user", user);
+        	jsonObject.put("action", "user.location");
+			jsonObject.put("userID", user.getUserId());
+			jsonObject.put("sess", user.getSession());
 	        jsonObject.put("lat", location.getLatitude());
 	        jsonObject.put("lon", location.getLongitude());
 			tcpClient.sendMessage(jsonObject.toString());
@@ -77,21 +88,13 @@ public class InternetService {
 			e.printStackTrace();
 		}
 	}
-	
-	public boolean startThread() {
-		tcpClient.startThread();
-		return isNetworkAvailable();
-	}
-	
-	public void stopThread() {
-		tcpClient.stopThread();
-	}
 
 	public void createUnit(UnitType type, Location loc) {
 		JSONObject jsonObject = new JSONObject();
         try {
         	jsonObject.put("action", "unit.create");
-			jsonObject.put("user", user);
+			jsonObject.put("userID", user.getUserId());
+			jsonObject.put("sess", user.getSession());
 	        jsonObject.put("lat", loc.getLatitude());
 	        jsonObject.put("lon", loc.getLongitude());
 	        jsonObject.put("type", type);
@@ -102,12 +105,13 @@ public class InternetService {
 		}
 	}
 	
-	public void moveUnit(String id, GeoPoint pt) {
+	public void moveUnit(int i, GeoPoint pt) {
 		JSONObject jsonObject = new JSONObject();
         try {
         	jsonObject.put("action", "unit.move");
-			jsonObject.put("user", user);
-			jsonObject.put("id", id);
+			jsonObject.put("userID", user.getUserId());
+			jsonObject.put("sess", user.getSession());
+			jsonObject.put("id", i);
 	        jsonObject.put("lat", pt.getLatitudeE6()/1E6);
 	        jsonObject.put("lon", pt.getLongitudeE6()/1E6);
 			tcpClient.sendMessage(jsonObject.toString());

@@ -5,13 +5,13 @@ import org.json.JSONObject;
 
 import uk.ac.aber.luw9.mapwars.GameMap;
 import uk.ac.aber.luw9.mapwars.HomeScreen;
+import uk.ac.aber.luw9.mapwars.User;
 import uk.ac.aber.luw9.mapwars.Utils;
 import uk.ac.aber.luw9.mapwars.services.InternetService;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.util.Log;
 import android.widget.Toast;
 
 public class MainController {
@@ -22,7 +22,7 @@ public class MainController {
 	private InternetService internetService;
 	private GameMapController gameMapController;
 	private HomeScreen homeScreen;
-	private String user;
+	private User user;
 
 	public static MainController getController() {
 		if (mainController == null) {
@@ -60,9 +60,10 @@ public class MainController {
 
 	public void setHomeScreen(HomeScreen homeScreen) {
 		this.homeScreen = homeScreen;
+		setActivity(homeScreen);
 	}
 	
-	public void changePlaces(Class<GameMap> target) {
+	public void changePlaces(Class target) {
 		Intent intent = new Intent(currentContext, target);
 		
 		currentActivity.startActivity(intent);
@@ -84,13 +85,16 @@ public class MainController {
 		//Log.i("tcp", json.toString());
 		
 		String action = json.getString("action");
-		if (action.equals("login")) {
-			int response = json.getInt("response");
-			String user = json.getString("user");
-			if (response == 1) {
+		if (action.equals("user.login")) {
+			int status = json.getInt("status");
+			if (status == 1) {
 				Toast.makeText(currentContext, "Correct", Toast.LENGTH_SHORT).show();
 				
-				this.user = user;
+				int user_id = json.getInt("userID");
+				String sess = json.getString("sess");
+				user = new User(user_id);
+				user.setSession(sess);
+
 				internetService.setUser(user);
 				
 				changePlaces(GameMap.class);			
@@ -107,7 +111,7 @@ public class MainController {
 		}
 	}
 
-	public String getUser() {
+	public User getUser() {
 		return user; 
 	}
 	

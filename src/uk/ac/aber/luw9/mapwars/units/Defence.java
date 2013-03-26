@@ -4,7 +4,7 @@ import org.osmdroid.util.GeoPoint;
 
 public class Defence extends Unit {
 	
-	public Defence(String id, String owner, GeoPoint location) {
+	public Defence(int id, int owner, GeoPoint location) {
 		super(id, owner, UnitType.DEFENCE, location);
 	}
 

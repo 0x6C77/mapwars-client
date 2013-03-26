@@ -7,11 +7,13 @@ import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 
 import uk.ac.aber.luw9.mapwars.GameMap;
+import uk.ac.aber.luw9.mapwars.HomeScreen;
 import uk.ac.aber.luw9.mapwars.R;
 import uk.ac.aber.luw9.mapwars.services.InternetService;
 import uk.ac.aber.luw9.mapwars.services.LocationTracker;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
 import android.app.Activity;
+import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
 import android.view.View;
@@ -44,6 +46,10 @@ public class GameMapController implements OnClickListener, MapListener {
  
 	public void serviceOnline(String service) {
 		gameMap.serviceOnline(service);
+	}
+	
+	public void serviceUnavailable(String service) {
+		mainController.changePlaces(HomeScreen.class);
 	}
 
 	public void updateUserLocation(Location location) {

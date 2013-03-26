@@ -74,67 +74,88 @@ public class UnitController implements Runnable {
 		}
 	}
 	
-	public boolean unitExists(String id) {
+	public boolean unitExists(int id) {
 		for (Unit unit : units) {
-			if (unit.getId().equals(id)) {
+			if (unit.getId() == id) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public void moveVehicle(String id, GeoPoint pt, boolean report) {
+	public void moveVehicle(int i, GeoPoint pt, boolean report) {
 		for (Unit unit : units) {
-			if (unit.getId().equals(id) && unit.getType() == UnitType.VEHICLE) {
-				Vehicle vehicle = (Vehicle) unit;
-				vehicle.setTargetLocation(pt);
+			if (unit.getId() == i && unit.getType() == UnitType.VEHICLE) {
 				if (report) {
-					mainController.getInternetService().moveUnit(id, pt);
+					mainController.getInternetService().moveUnit(i, pt);
+				} else {
+					Vehicle vehicle = (Vehicle) unit;
+					vehicle.setTargetLocation(pt);
 				}
 				break;
 			}
 		}
 	}
 	
-	public void updateUnits(String id, String owner, GeoPoint pt, String type) {
+	public void updateUnits(int id, int owner, String type, GeoPoint current_pt, GeoPoint target_pt) {
 		UnitType unitType = UnitType.valueOf(type);
 		
-		if (owner.equals(mainController.getUser()))
-			owner = null;
+		if (owner == mainController.getUser().getUserId())
+			owner = 0;
 		
  		if (unitExists(id)) {
  			if (unitType == UnitType.VEHICLE)
- 				moveVehicle(id, pt, false);
+ 				moveVehicle(id, target_pt, false);
  		} else {
- 			Log.i("UnitController", "Adding unit " + id + " [" + owner + "," + mainController.getUser() + "]");
+ 			Log.i("UnitController", "Adding unit " + id + " [" + owner + "," + mainController.getUser().getUserId() + "]");
  			Unit tmpUnit;
  			if (unitType == UnitType.VEHICLE) {
-	 			tmpUnit = new Vehicle(id, owner, pt);
+	 			tmpUnit = new Vehicle(id, owner, current_pt);
 	 			addUnit(tmpUnit);
+	 			moveVehicle(id, target_pt, false);
  			} else if (unitType == UnitType.DEFENCE) {
- 				tmpUnit = new Defence(id, owner, pt);
+ 				tmpUnit = new Defence(id, owner, current_pt);
  				addUnit(tmpUnit);
  			}
  		}
 	}
 	
 	public void handleUpdates(JSONObject json) throws JSONException {
-		//get each user listed and pass them to GameMapController
-		//JSONObject units = json.getJSONObject("units");
-		//JSONArray vehicles = units.getJSONArray("vehicles");
-		JSONArray units = json.getJSONArray("units");
-		for (int i = 0 ; i < units.length(); i++){
-			Log.i("UnitControllerUpdate", units.getString(i));
-			JSONObject unit = new JSONObject(units.getString(i));
-			String id = unit.getString("id");
-			String owner = unit.getString("user");
-			String lat = unit.getString("lat");
-			String lon = unit.getString("lon");
-			String type = unit.getString("type");
-			
-			GeoPoint pt = Utils.createGeoPoint(Double.valueOf(lat), Double.valueOf(lon));
-			
-			updateUnits(id, owner, pt, type);
+		String action = json.getString("action");
+		if (action.equals("unit.attack")) {
+			int health = json.getInt("health");
+			int target = json.getInt("target");
+			for (Unit unit : units) {
+				if (unit.getId() == target) {
+					if (health > 0)
+						unit.setHealth(health);
+					else
+						units.remove(unit);
+				}
+			}
+		} else {
+			JSONArray units = json.getJSONArray("units");
+			for (int i = 0 ; i < units.length(); i++){
+				Log.i("UnitControllerUpdate", units.getString(i));
+				JSONObject unit = new JSONObject(units.getString(i));
+				int id = unit.getInt("unitID");
+				int owner = unit.getInt("userID");
+				String type = unit.getString("type");
+	
+				//current location
+				JSONObject current_location = unit.getJSONObject("location");
+				String current_lat = current_location.getString("lat");
+				String current_lon = current_location.getString("lon");
+				GeoPoint current_pt = Utils.createGeoPoint(Double.valueOf(current_lat), Double.valueOf(current_lon));
+				
+				//current location
+				JSONObject target_location = unit.getJSONObject("target");
+				String target_lat = target_location.getString("lat");
+				String target_lon = target_location.getString("lon");
+				GeoPoint target_pt = Utils.createGeoPoint(Double.valueOf(target_lat), Double.valueOf(target_lon));
+				
+				updateUnits(id, owner, type, current_pt, target_pt);
+			}
 		}
 		
 		mainController.redraw();
@@ -165,7 +186,7 @@ public class UnitController implements Runnable {
 				if (distance > 0) {
 					//Log.i("UnitControllerMove", String.valueOf(distance));
 					vehicle.setBearing(loc.bearingTo(tmpLoc));
-					
+
 					int iStages = (int) Math.round(distance / 0.4);
 	
 			        int newLat = pt.getLatitudeE6() + ((tmpPt.getLatitudeE6() - pt.getLatitudeE6()) / iStages);
