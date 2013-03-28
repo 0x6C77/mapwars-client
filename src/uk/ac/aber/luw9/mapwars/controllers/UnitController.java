@@ -34,34 +34,29 @@ public class UnitController implements Runnable {
 		mainController = MainController.getController();
 	}
 	
+	/**
+	 * Gets a list of all known units
+	 * 
+	 * @return List of units
+	 */
 	public ArrayList<Unit> getUnits() {
 		return getUnits(false);
 	}
 	
-	public ArrayList<Unit> getUnits(boolean user) {
-		return getUnits(user, null);
-	}
-	
-	public ArrayList<Unit> getUnits(boolean user, UnitType type) {
+	/**
+	 * Gets a list of units
+	 * 
+	 * @param userOnly list just users units or all units
+	 * @return List of units
+	 */
+	public ArrayList<Unit> getUnits(boolean userOnly) {
 		ArrayList<Unit> response = new ArrayList<Unit>();
-		//if (type == UnitType.VEHICLE) {
-			if (!user) {
-				for (Unit unit : units) {
-					response.add(unit);
-				}	
-				return response;
-			} else {
-				//find users units
-				for (Unit unit : units) {
-					if (unit.amOwner()) {
-						response.add(unit);
-					}
-				}		
-				return response;
+		for (Unit unit : units) {
+			if (!userOnly || unit.amOwner()) {
+				response.add(unit);
 			}
-		//}
-		
-		//return null;
+		}	
+		return response;
 	}
 	
 	public void addUnit(Unit unit) {
@@ -97,7 +92,7 @@ public class UnitController implements Runnable {
 		}
 	}
 	
-	public void updateUnits(int id, int owner, String type, GeoPoint current_pt, GeoPoint target_pt) {
+	public void updateUnits(int id, int owner, String type, GeoPoint current_pt, GeoPoint target_pt, int health) {
 		UnitType unitType = UnitType.valueOf(type);
 		
 		if (owner == mainController.getUser().getUserId())
@@ -107,14 +102,16 @@ public class UnitController implements Runnable {
  			if (unitType == UnitType.VEHICLE)
  				moveVehicle(id, target_pt, false);
  		} else {
- 			Log.i("UnitController", "Adding unit " + id + " [" + owner + "," + mainController.getUser().getUserId() + "]");
+ 			Log.i("UnitController", "Adding unit " + id + " [" + owner + "," + mainController.getUser().getUserId() + "] " + health);
  			Unit tmpUnit;
  			if (unitType == UnitType.VEHICLE) {
 	 			tmpUnit = new Vehicle(id, owner, current_pt);
+	 			tmpUnit.setHealth(health);
 	 			addUnit(tmpUnit);
 	 			moveVehicle(id, target_pt, false);
  			} else if (unitType == UnitType.DEFENCE) {
  				tmpUnit = new Defence(id, owner, current_pt);
+ 				tmpUnit.setHealth(health);
  				addUnit(tmpUnit);
  			}
  		}
@@ -136,7 +133,6 @@ public class UnitController implements Runnable {
 		} else {
 			JSONArray units = json.getJSONArray("units");
 			for (int i = 0 ; i < units.length(); i++){
-				Log.i("UnitControllerUpdate", units.getString(i));
 				JSONObject unit = new JSONObject(units.getString(i));
 				int id = unit.getInt("unitID");
 				int owner = unit.getInt("userID");
@@ -154,7 +150,9 @@ public class UnitController implements Runnable {
 				String target_lon = target_location.getString("lon");
 				GeoPoint target_pt = Utils.createGeoPoint(Double.valueOf(target_lat), Double.valueOf(target_lon));
 				
-				updateUnits(id, owner, type, current_pt, target_pt);
+				int health = unit.getInt("health");
+				
+				updateUnits(id, owner, type, current_pt, target_pt, health);
 			}
 		}
 		
@@ -221,10 +219,10 @@ public class UnitController implements Runnable {
 			}
 		}
 		
-		if (unitsMoved) {
+		//if (unitsMoved) {
 			//Log.i("UnitController", "Something moved");
 			map.redraw();
-		}
+		//}
 	}
 
 	public void toggleSelectMethod(boolean selectBox) {

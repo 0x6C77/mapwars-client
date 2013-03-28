@@ -168,13 +168,19 @@ public class UnitOverlay extends Overlay {
 		dOverlay = Bitmap.createScaledBitmap(overlay_defence_user, radius, radius, false);
 		deOverlay = Bitmap.createScaledBitmap(overlay_defence_enemy, radius, radius, false);
 
-        ArrayList<Unit> units = unitController.getUnits(false, UnitType.VEHICLE);
+        ArrayList<Unit> units = unitController.getUnits();
 	    for (Unit unit : units) {
 	    	mapView.getProjection().toPixels(unit.getLocation(), point);
 	    	if (unit.getType() == UnitType.VEHICLE) {
 	    		if (unit.amOwner()) {
 		        	if (unit.isSelected()) {
 		        		tOverlay = usOverlay;
+		        		
+		        		//draw range indicator
+		        		Paint paint = new Paint();
+		        		paint.setARGB(128, 255, 255, 255);
+		        		int rangeRadius = (int) mapView.getProjection().metersToEquatorPixels(100);
+		        		canvas.drawCircle(point.x, point.y, rangeRadius, paint);
 		        	} else {
 		        		tOverlay = uOverlay;
 		        	}
@@ -188,6 +194,26 @@ public class UnitOverlay extends Overlay {
     				tOverlay = deOverlay;	
     			}
 	    	}
+	    	
+	    	// check if unit is under attack, if so show health indicator
+	    	if (unit.isSelected() || unit.underAttack()) {
+	    		int healthContWidth = (int) mapView.getProjection().metersToEquatorPixels(50);
+	    		int healthHeight = (int) mapView.getProjection().metersToEquatorPixels(10);
+	    		float healthPerc = (float) unit.getHealth() / 100;
+	    		int healthWidth = Math.round(healthContWidth * healthPerc);
+	    	
+	    		Log.i("health", healthWidth + " " + unit.getHealth() + " " + healthPerc + " " + healthContWidth);
+	    		
+    			Paint paint = new Paint();
+    			paint.setColor(Color.BLACK);
+
+    			Paint redPaint = new Paint();
+    			redPaint.setColor(Color.RED);
+
+    			canvas.drawRect(point.x-(healthContWidth/2), point.y-(healthHeight*2), point.x+(healthContWidth/2), point.y-(healthHeight*3), paint);
+	    		canvas.drawRect(point.x-(healthContWidth/2)+2, point.y-(healthHeight*2)-2, point.x-(healthContWidth/2)+healthWidth-2, point.y-(healthHeight*3)+2, redPaint);
+	    	}
+	    	
 
 
 	        Matrix mat = new Matrix();

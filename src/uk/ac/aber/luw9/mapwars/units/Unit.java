@@ -10,6 +10,7 @@ public abstract class Unit {
 	private boolean selected;
 	private float bearing;
 	private int health;
+	private long lastAttacked;
 	
 	public Unit(int id, int owner, UnitType type, GeoPoint location) {
 		this.id = id;
@@ -68,7 +69,17 @@ public abstract class Unit {
 	}
 
 	public void setHealth(int health) {
+		if (health < this.health)
+			lastAttacked = System.currentTimeMillis();
 		this.health = health;
+	}
+	
+	public int getHealth() {
+		return health;
+	}
+	
+	public boolean underAttack() {
+		return ((System.currentTimeMillis() - lastAttacked) < 5000);
 	}
 
 }
