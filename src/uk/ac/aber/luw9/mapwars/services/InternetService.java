@@ -19,14 +19,16 @@ public class InternetService {
 	
 	public InternetService(Context context) {
 		this.context = context;
-		isNetworkAvailable();
-		
 		tcpClient = new TCPClient();
 	}
 	
+	/**
+	 * Check for network connection
+	 * @return is network connection available
+	 */
 	private boolean isNetworkAvailable() {
 	    ConnectivityManager connectivityManager 
-	          = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+	          = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 	    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 	   
 	    return (activeNetworkInfo != null
@@ -43,8 +45,11 @@ public class InternetService {
 	}
 
 	public boolean startThread() {
+		if (!isNetworkAvailable())
+			return false;
+		
 		tcpClient.startThread();
-		return isNetworkAvailable();
+		return true;
 	}
 	
 	public void stopThread() {
@@ -64,13 +69,17 @@ public class InternetService {
 			
 			return true;
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
         return false;
 	}
 	
+	/**
+	 * Create json to update user location and send to server
+	 * 
+	 * @param location Users location
+	 */
 	public void updateLocation(Location location) {	
 		if (location == null)
 			return;
@@ -84,11 +93,16 @@ public class InternetService {
 	        jsonObject.put("lon", location.getLongitude());
 			tcpClient.sendMessage(jsonObject.toString());
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Create json to make new unit and send to server
+	 * 
+	 * @param type unit type
+	 * @param loc units location
+	 */
 	public void createUnit(UnitType type, Location loc) {
 		JSONObject jsonObject = new JSONObject();
         try {
@@ -100,11 +114,16 @@ public class InternetService {
 	        jsonObject.put("type", type);
 			tcpClient.sendMessage(jsonObject.toString());
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
+	/**
+	 * Create json to move unit and send to server
+	 * 
+	 * @param type unit type
+	 * @param loc units location
+	 */	
 	public void moveUnit(int i, GeoPoint pt) {
 		JSONObject jsonObject = new JSONObject();
         try {
@@ -116,7 +135,6 @@ public class InternetService {
 	        jsonObject.put("lon", pt.getLongitudeE6()/1E6);
 			tcpClient.sendMessage(jsonObject.toString());
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

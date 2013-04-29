@@ -1,10 +1,5 @@
 package uk.ac.aber.luw9.mapwars;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
 import org.osmdroid.util.GeoPoint;
 
 import android.content.Context;
@@ -13,36 +8,6 @@ import android.util.DisplayMetrics;
 
 public class Utils {
 	
-	// taken from http://stackoverflow.com/questions/1756296/android-writing-logs-to-text-file
-	public static void appendLog(String text)
-	{       
-	   File logFile = new File("sdcard/mapwars.log");
-	   if (!logFile.exists())
-	   {
-	      try
-	      {
-	         logFile.createNewFile();
-	      } 
-	      catch (IOException e)
-	      {
-	         // TODO Auto-generated catch block
-	         e.printStackTrace();
-	      }
-	   }
-	   try
-	   {
-	      //BufferedWriter for performance, true to set append to file flag
-	      BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true)); 
-	      buf.append(text);
-	      buf.newLine();
-	      buf.close();
-	   }
-	   catch (IOException e)
-	   {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-	   }
-	}
 	
     /**
      * Checks if the screen size is equal or above given length
@@ -68,10 +33,23 @@ public class Utils {
 	    }
 	} 
 	
+	/**
+	 * Helper function to convert a lat and lon to GeoPoint
+	 * 
+	 * @param lat latitude
+	 * @param lon longitude
+	 * @return GeoPoint of coordinates
+	 */
 	public static GeoPoint createGeoPoint(double lat, double lon) {
 		return new GeoPoint((int)(lat * 1E6), (int)(lon * 1E6));
 	}
-	
+
+	/**
+	 * Helper function to get lat and lon from a GeoPoint
+	 * 
+	 * @param pt GeoPoint of location
+	 * @return location
+	 */
 	public static Location createLocation(GeoPoint pt) {
 		Location location = new Location("");
 		double latitude = pt.getLatitudeE6() / 1E6;

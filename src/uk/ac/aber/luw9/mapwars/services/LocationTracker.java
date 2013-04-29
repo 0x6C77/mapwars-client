@@ -11,6 +11,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+/**
+ * Handle location updates and store record of last known position
+ * 
+ * @author Luke Ward
+ */
 public class LocationTracker extends Service implements LocationListener {
 
 	private Context context;
@@ -20,9 +25,9 @@ public class LocationTracker extends Service implements LocationListener {
 	private Location currentLocation;
 	private GameMapController gameMapController;
 	
-	private static final long MIN_DISTANCE = 2; //2 meters
-    private static final long MIN_TIME = 30; //30 seconds
-    private static final int ONE_MINUTE = 1000 * 60;
+	private static final long MIN_DISTANCE = 2; //2 meters between location updates
+    private static final long MIN_TIME = 30; //30 seconds between location updates
+    private static final int ONE_MINUTE = 1000 * 60; // time deemed to be reasonable
 	
 	public LocationTracker(Context context, GameMapController gameMapController) {
 		this.context = context;
@@ -33,6 +38,9 @@ public class LocationTracker extends Service implements LocationListener {
 	}
 
 	
+	/**
+	 * Add all location listeners
+	 */
 	public void addListeners() {
 		locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		
@@ -43,7 +51,6 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		if (!isGPSEnabled && !isNetworkEnabled) {
 			Log.i("Location", "No locations");
-			gameMapController.serviceUnavailable("location");
         } else {
 			locationManager.requestLocationUpdates(
 			        LocationManager.NETWORK_PROVIDER,
@@ -65,8 +72,6 @@ public class LocationTracker extends Service implements LocationListener {
 		if (currentLocation != null) {
 			Log.i("Location", currentLocation.toString());
 			gameMapController.updateUserLocation(currentLocation);
-		} else {
-			gameMapController.serviceUnavailable("location");
 		}
 	}
 	
@@ -82,64 +87,60 @@ public class LocationTracker extends Service implements LocationListener {
 	}
 
 	public void onProviderDisabled(String provider) {
-		//addListeners();
+		//remove listener
 	}
 
 	public void onProviderEnabled(String provider) {
-		//addListeners();
+		//add listener
 	}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {
-		// TODO Auto-generated method stub
+		//check status
 	}
 	
+	/**
+	 * Determine if location is better than the one already known
+	 * taken from http://developer.android.com/guide/topics/location/strategies.html
+	 * 
+	 * @param location
+	 * @param currentBestLocation
+	 * @return
+	 */
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
+		// If no location is known then new location is to be accepted
 	    if (currentBestLocation == null) {
-	        // A new location is always better than no location
 	        return true;
 	    }
 
-	    // Check whether the new location fix is newer or older
+	    // Check whether the new location is newer or older and within a reasonable time frame
 	    long timeDelta = location.getTime() - currentBestLocation.getTime();
 	    boolean isSignificantlyNewer = timeDelta > ONE_MINUTE;
 	    boolean isSignificantlyOlder = timeDelta < -ONE_MINUTE;
 	    boolean isNewer = timeDelta > 0;
 
-	    // If it's been more than two minutes since the current location, use the new location
-	    // because the user has likely moved
+	    // If the new location is considerably newer then it is probably better
 	    if (isSignificantlyNewer) {
 	        return true;
-	    // If the new location is more than two minutes older, it must be worse
+	     // If the new location is considerably older then it is probably better
 	    } else if (isSignificantlyOlder) {
 	        return false;
 	    }
 
-	    // Check whether the new location fix is more or less accurate
+	    // Check whether the new location is more or less accurate
 	    int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
-	    boolean isLessAccurate = accuracyDelta > 0;
 	    boolean isMoreAccurate = accuracyDelta < 0;
 	    boolean isSignificantlyLessAccurate = accuracyDelta > 200;
 
-	    // Check if the old and new location are from the same provider
-	    boolean isFromSameProvider = isSameProvider(location.getProvider(),
-	            currentBestLocation.getProvider());
-
-	    // Determine location quality using a combination of timeliness and accuracy
+	    // If new location is more accurate or newer and not 
+	    // considerably less accurate accept new location
 	    if (isMoreAccurate) {
 	        return true;
-	    } else if (isNewer && !isLessAccurate) {
-	        return true;
-	    } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+	    } else if (isNewer && !isSignificantlyLessAccurate) {
 	        return true;
 	    }
+	    
+	    // Else reject new location
 	    return false;
-	}
-	
-	private boolean isSameProvider(String provider1, String provider2) {
-	    if (provider1 == null) {
-	    	return provider2 == null;
-	    }
-	    return provider1.equals(provider2);
 	}
 	
 	public Location getLocation() {

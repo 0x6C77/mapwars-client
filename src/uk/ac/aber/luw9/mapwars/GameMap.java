@@ -22,6 +22,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+/**
+ * Main game activity, implements a rudimentary loading screen
+ * 
+ * @author Luke Ward (luw9)
+ */
 public class GameMap extends MapActivity {
 
 	private GameMapController gameMapController;
@@ -33,9 +38,14 @@ public class GameMap extends MapActivity {
     private boolean loaded;
     private int loadedCount = 0;
     private TextView loadingText;
-    private ArrayList<Overlay> tmpOverlays = new ArrayList<Overlay>();
+    private ArrayList<Overlay> overlays = new ArrayList<Overlay>();
+    
+    private boolean tileSourceSwitch = false;
 
-
+	/**
+	 * Display loading screen and create game controller, process
+	 * will wait for all services to be loaded before continuing
+	 */
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +60,12 @@ public class GameMap extends MapActivity {
         	setupComplete();
      }
 	
+	/**
+	 * Loading screen waits until the specified number of services are online
+	 * Once the count is reached the loading screen is hidden and the game map displayed
+	 * 
+	 * @param service Service that has been verified
+	 */
 	public void serviceOnline(String service) {
 		if (!loaded) {
 			loadingText.append(service + "... ");
@@ -62,69 +78,81 @@ public class GameMap extends MapActivity {
 			}
 		}
 	}
-
-
-	public void serviceUnavailable(String service) {
-		
-	}
 	
-	 public void setupComplete() {
+	 /**
+	 * After all services have been checked create the game map and controls
+	 */
+	private void setupComplete() {
 	 	setContentView(R.layout.map); 
 	 
-		mapView = (MapView) findViewById(R.id.map);
-		mapView.setBuiltInZoomControls(false);
+	 	mapView = (MapView) findViewById(R.id.map);
 		
-		XYTileSource tileSource = new XYTileSource("Meow", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-wpji9msa/");
-		//XYTileSource tileSource = new XYTileSource("v2", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-dq73ewie/");
-		
+		//set default tilesource to the light map tiles
+		XYTileSource tileSource = new XYTileSource("light2", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-dq73ewie/");
 		mapView.setTileSource(tileSource);
 		
+		//hide default zoom controls as custom controls will be added
 	    mapView.setBuiltInZoomControls(false);
+	    //disable pinch to zoom controls
 	    mapView.setMultiTouchControls(false);
 	    
-	    //load overlays
-	    for (Overlay overlay : tmpOverlays) {
+	    //add overlays to the game map
+	    for (Overlay overlay : overlays) {
 	    	addOverlay(overlay);
 	    }
-
-	    mapView.setMapListener(gameMapController);
 	    
 		mapViewController = mapView.getController();
-		mapViewController.setZoom(17);
-		
+	    //set the starting zoom level
+	    mapViewController.setZoom(17);
+	    
+		//fetch latest known location and center map
 		Location loc = gameMapController.getUserLocation();
-		
-		Log.i("location", loc.toString());
-		
 		mapViewController.setCenter(Utils.createGeoPoint(loc.getLatitude(), loc.getLongitude()));
 		
+		//add event listeners to all buttons
 		findViewById(R.id.zoomInButton).setOnClickListener(gameMapController);
 		findViewById(R.id.zoomOutButton).setOnClickListener(gameMapController);
 		findViewById(R.id.trackLocationButton).setOnClickListener(gameMapController);
 		findViewById(R.id.vehicleBuyButton).setOnClickListener(gameMapController);
-		findViewById(R.id.defenceBuyButton).setOnClickListener(gameMapController);
 		findViewById(R.id.selectToggleButton).setOnClickListener(gameMapController);
+		findViewById(R.id.mapToggleButton).setOnClickListener(gameMapController);
 		
+		//check if certain button exists before attempting to add listener
+		//button is not utilized on tablet layout
 		shopButton = (ImageView)findViewById(R.id.headerShopButton);
 		if (shopButton != null) {
 			shopButton.setOnClickListener(gameMapController);
+			shopView = (LinearLayout)findViewById(R.id.overlayShop);
 		}
-		
-		shopView = (LinearLayout)findViewById(R.id.overlayShop);
-	 }
+	}
  	
-	 public void addOverlay(Overlay overlay) {
-		 if (mapView != null) {
-			 mapView.getOverlays().add(overlay);
-		 } else {
-			tmpOverlays.add(overlay);
-		 }
-	 }
-	 
-	 public void redraw() {
+	
+	/**
+	 * Add overlay to map
+	 * can be done before map is ready
+	 * 
+	 * @param overlay Overlay to be added
+	 */
+	public void addOverlay(Overlay overlay) {
+		/*
+		 * check if map is ready
+		 * if so add directly to map
+		 * else store in array for later use
+		 */
+		if (mapView != null) {
+			mapView.getOverlays().add(overlay);
+		} else {
+			overlays.add(overlay);
+		}
+	}
+	
+	/**
+	 * Invalidate map to force redraw 
+	 */
+	public void redraw() {
 		 if (mapView != null)
 			 mapView.postInvalidate();
-	 }
+	}
     
 	@Override
     protected void onStop() {
@@ -151,8 +179,6 @@ public class GameMap extends MapActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-	        case R.id.menu_settings:
-	            return true;
 	        case R.id.menu_exit:
 	        	finish();
 	            return true;
@@ -161,15 +187,24 @@ public class GameMap extends MapActivity {
         return false;
     }
 
+	/**
+	 * Zoom map view in one level
+	 */
 	public void zoomIn() {
 		mapViewController.zoomIn();
 	}
-	
+
+	/**
+	 * Zoom map view out one level
+	 */	
 	public void zoomOut() {
 		mapViewController.zoomOut();
 	}
-	
-	public void setUserLocation(Location loc) {
+
+	/**
+	 * Move map to center on location
+	 */	
+	public void moveMap(Location loc) {
 		GeoPoint pt = Utils.createGeoPoint(loc.getLatitude(), loc.getLongitude());
 		
 		if (loaded) {
@@ -220,5 +255,15 @@ public class GameMap extends MapActivity {
 	public void showLocationSettings() {
 		Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
 		startActivity(intent);
+	}
+	
+	public void toggleMap() {
+		XYTileSource tileSource;
+		tileSourceSwitch = !tileSourceSwitch;
+		if (tileSourceSwitch)
+			tileSource = new XYTileSource("dark2", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-wpji9msa/");
+		else
+			tileSource = new XYTileSource("light2", null, 12, 17, 256, ".png", "http://a.tiles.mapbox.com/v3/flabbyrabbit.map-dq73ewie/");
+		mapView.setTileSource(tileSource);
 	}
 }

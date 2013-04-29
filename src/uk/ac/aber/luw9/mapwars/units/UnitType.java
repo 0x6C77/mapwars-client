@@ -1,5 +1,5 @@
 package uk.ac.aber.luw9.mapwars.units;
 
 public enum UnitType {
-	BASE, VEHICLE, DEFENCE, STRUCTURE
+	BASE, VEHICLE, STRUCTURE
 }

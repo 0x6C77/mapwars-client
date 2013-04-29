@@ -2,7 +2,14 @@ package uk.ac.aber.luw9.mapwars.units;
 
 import org.osmdroid.util.GeoPoint;
 
+/**
+ * Abstract unit class stores details about each unit, including its location,
+ * bearing and health
+ * 
+ * @author Luke Ward
+ */
 public abstract class Unit {
+
 	private int id;
 	private int owner;
 	private GeoPoint location;
@@ -78,7 +85,11 @@ public abstract class Unit {
 		return health;
 	}
 	
-	public boolean underAttack() {
+	/**
+	 * Determine if the unit is still under attack
+	 * @return unit is under attack
+	 */
+	public boolean isUnderAttack() {
 		return ((System.currentTimeMillis() - lastAttacked) < 5000);
 	}
 

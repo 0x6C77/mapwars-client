@@ -12,7 +12,7 @@ import org.osmdroid.util.GeoPoint;
 
 import uk.ac.aber.luw9.mapwars.GameMap;
 import uk.ac.aber.luw9.mapwars.Utils;
-import uk.ac.aber.luw9.mapwars.units.Defence;
+import uk.ac.aber.luw9.mapwars.units.Structure;
 import uk.ac.aber.luw9.mapwars.units.Unit;
 import uk.ac.aber.luw9.mapwars.units.UnitOverlay;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
@@ -59,16 +59,43 @@ public class UnitController implements Runnable {
 		return response;
 	}
 	
+	/**
+	 * Gets a single units
+	 * 
+	 * @param userOnly list just users units or all units
+	 * @return List of units
+	 */
+	public Unit getUnit(int id) {
+		for (Unit unit : units) {
+			if (unit.getId() == id) {
+				return unit;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Add unit to list
+	 * 
+	 * @param unit unit to be added
+	 */
 	public void addUnit(Unit unit) {
 		units.add(unit);
 		
+		//If thread is not running to track units, start it
 		if (!threadRunning) {
-			threadRunning = true;
+			threadRunning = true; 
 			exec = Executors.newSingleThreadScheduledExecutor();
 			exec.scheduleAtFixedRate(this, 0, 20, TimeUnit.MILLISECONDS);
 		}
 	}
 	
+	/**
+	 * Check if unit id exists
+	 * 
+	 * @param id unit id to check
+	 * @return unit exists
+	 */
 	public boolean unitExists(int id) {
 		for (Unit unit : units) {
 			if (unit.getId() == id) {
@@ -78,11 +105,19 @@ public class UnitController implements Runnable {
 		return false;
 	}
 
-	public void moveVehicle(int i, GeoPoint pt, boolean report) {
+	/**
+	 * Set units new target location with the option to update
+	 * server of movement
+	 * 
+	 * @param id unit id
+	 * @param pt new location
+	 * @param report inform server of update
+	 */
+	public void moveVehicle(int id, GeoPoint pt, boolean report) {
 		for (Unit unit : units) {
-			if (unit.getId() == i && unit.getType() == UnitType.VEHICLE) {
+			if (unit.getId() == id && unit.getType() == UnitType.VEHICLE) {
 				if (report) {
-					mainController.getInternetService().moveUnit(i, pt);
+					mainController.getInternetService().moveUnit(id, pt);
 				} else {
 					Vehicle vehicle = (Vehicle) unit;
 					vehicle.setTargetLocation(pt);
@@ -92,6 +127,16 @@ public class UnitController implements Runnable {
 		}
 	}
 	
+	/**
+	 * Update or create a unit
+	 * 
+	 * @param id unit id
+	 * @param owner owner id
+	 * @param type unit type
+	 * @param current_pt current location
+	 * @param target_pt target location
+	 * @param health current health
+	 */
 	public void updateUnits(int id, int owner, String type, GeoPoint current_pt, GeoPoint target_pt, int health) {
 		UnitType unitType = UnitType.valueOf(type);
 		
@@ -99,8 +144,13 @@ public class UnitController implements Runnable {
 			owner = 0;
 		
  		if (unitExists(id)) {
- 			if (unitType == UnitType.VEHICLE)
- 				moveVehicle(id, target_pt, false);
+			if (health > 0)
+				getUnit(id).setHealth(health);
+	 			if (unitType == UnitType.VEHICLE)
+	 				moveVehicle(id, target_pt, false);
+			else
+				units.remove(getUnit(id));
+ 			
  		} else {
  			Log.i("UnitController", "Adding unit " + id + " [" + owner + "," + mainController.getUser().getUserId() + "] " + health);
  			Unit tmpUnit;
@@ -109,14 +159,20 @@ public class UnitController implements Runnable {
 	 			tmpUnit.setHealth(health);
 	 			addUnit(tmpUnit);
 	 			moveVehicle(id, target_pt, false);
- 			} else if (unitType == UnitType.DEFENCE) {
- 				tmpUnit = new Defence(id, owner, current_pt);
+ 			} else if (unitType == UnitType.STRUCTURE) {
+ 				tmpUnit = new Structure(id, owner, current_pt);
  				tmpUnit.setHealth(health);
  				addUnit(tmpUnit);
  			}
  		}
 	}
 	
+	/**
+	 * Parse and handle updates passed from the server
+	 * 
+	 * @param json updates
+	 * @throws JSONException
+	 */
 	public void handleUpdates(JSONObject json) throws JSONException {
 		String action = json.getString("action");
 		if (action.equals("unit.attack")) {
@@ -138,13 +194,13 @@ public class UnitController implements Runnable {
 				int owner = unit.getInt("userID");
 				String type = unit.getString("type");
 	
-				//current location
+				//use current location
 				JSONObject current_location = unit.getJSONObject("location");
 				String current_lat = current_location.getString("lat");
 				String current_lon = current_location.getString("lon");
 				GeoPoint current_pt = Utils.createGeoPoint(Double.valueOf(current_lat), Double.valueOf(current_lon));
 				
-				//current location
+				//use current location
 				JSONObject target_location = unit.getJSONObject("target");
 				String target_lat = target_location.getString("lat");
 				String target_lon = target_location.getString("lon");
@@ -152,6 +208,7 @@ public class UnitController implements Runnable {
 				
 				int health = unit.getInt("health");
 				
+				//Add or update unit on overlay
 				updateUnits(id, owner, type, current_pt, target_pt, health);
 			}
 		}
@@ -164,12 +221,19 @@ public class UnitController implements Runnable {
 			exec.shutdown();
 	}
 	
+	/* 
+	 * Thread used to track unit location
+	 */
 	@Override
 	public void run() {
 		GeoPoint pt, tmpPt;
 		Location loc, tmpLoc;
-		boolean unitsMoved = false;
 		
+		/*
+		 * Loop through each unit and see if it is moving
+		 * if so calculate its new location so it is closer
+		 * to its target location
+		 */
 		for (Unit unit : units) {
 			if (unit.getType() == UnitType.VEHICLE) {
 				Vehicle vehicle = (Vehicle) unit;
@@ -182,7 +246,6 @@ public class UnitController implements Runnable {
 				float distance = loc.distanceTo(tmpLoc);
 				
 				if (distance > 0) {
-					//Log.i("UnitControllerMove", String.valueOf(distance));
 					vehicle.setBearing(loc.bearingTo(tmpLoc));
 
 					int iStages = (int) Math.round(distance / 0.4);
@@ -193,36 +256,12 @@ public class UnitController implements Runnable {
 					pt.setLatitudeE6(newLat);
 					pt.setLongitudeE6(newLon);
 					vehicle.changeLocation(pt);
-					
-					unitsMoved = true;
 				}
-			} else if (unit.getType() == UnitType.DEFENCE) {
-				//seek the closest enemy unit
-				float closestDistance = 100;
-				for (Unit unit2 : units) {
-					if (unit2.getOwner() != unit.getOwner()) {
-						pt = unit.getLocation();
-						tmpPt = unit2.getLocation();
-						
-						loc = Utils.createLocation(pt);
-						tmpLoc = Utils.createLocation(tmpPt);
-						
-						float distance = loc.distanceTo(tmpLoc);
-						
-						if (distance < closestDistance) {
-							closestDistance = distance;
-							unit.setBearing(loc.bearingTo(tmpLoc) - 90);
-						}
-					}
-				}
-				unitsMoved = true;
 			}
 		}
 		
-		//if (unitsMoved) {
-			//Log.i("UnitController", "Something moved");
-			map.redraw();
-		//}
+		//Request map to be redrawn to show updated unit locations
+		map.redraw();
 	}
 
 	public void toggleSelectMethod(boolean selectBox) {

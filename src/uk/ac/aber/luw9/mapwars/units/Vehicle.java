@@ -4,6 +4,11 @@ import org.osmdroid.util.GeoPoint;
 
 import android.util.Log;
 
+/**
+ * Extends unit class adding the ability to move
+ * 
+ * @author Luke Ward
+ */
 public class Vehicle extends Unit {
 
 	private GeoPoint location, targetLocation;

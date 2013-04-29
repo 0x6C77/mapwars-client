@@ -23,8 +23,10 @@ import android.util.Log;
 
 public class TCPClient implements Runnable {
 	
-	private static final String SERVER_IP = "178.17.41.167";
+	//Server details
+	private static final String SERVER_IP = "clu.hackthis.co.uk";
 	private static final int SERVER_PORT = 4565;
+	
 	private ArrayBlockingQueue<String> messageQueue = new ArrayBlockingQueue<String>(100);
 	private static MainController mainController;
 	private boolean threadRunning;
@@ -41,24 +43,30 @@ public class TCPClient implements Runnable {
 		messageQueue.add(message);
 	}
 	
+	/**
+	 * Send message to server over open socket
+	 * Start listening thread if not already running
+	 * @param message
+	 */
 	public void sendMessage(String message) {
 		if (!threadRunning) {
 			startThread();
 		}
 
-		// THREAD THIS NOEW!!!!!
 		checkSocket();
 		try {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 			out.println(message);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		Log.d("TCP", "C: Sent " + message);
 	}
 	
+	/**
+	 * Start thread listening to socket
+	 */
 	public void startThread() {
 		if (!threadRunning) {
 			threadRunning = true;
@@ -69,18 +77,24 @@ public class TCPClient implements Runnable {
 		}
 	}
 	
+	/**
+	 * Stop thread listening to socket
+	 */	
 	public void stopThread() {
 		Log.i("TCPClient", "Stopping thread");
 		exec.shutdown();
 		try {
 			socket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		threadRunning = false;
 	}
 	
+	/**
+	 * Handle messages received from the server
+	 * passing them on to the relevant controller
+	 */
 	final static Handler handler = new Handler() {
 		  @Override
 		  public void handleMessage(Message msg) {
@@ -93,7 +107,6 @@ public class TCPClient implements Runnable {
 						mainController.handleTCPReply(response);
 				}
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -103,6 +116,9 @@ public class TCPClient implements Runnable {
 		  }
 	};
 		
+	/*
+	 * Thread listening to socket, waiting for new messages
+	 */
 	public void run() {
 		checkSocket();
 
@@ -117,6 +133,9 @@ public class TCPClient implements Runnable {
 		}
     }     
 	
+	/**
+	 * Check if socket is connected, if not reconnect
+	 */
 	public void checkSocket() {
 		try {
 			if (socket == null || socket.isClosed()) {
@@ -126,7 +145,7 @@ public class TCPClient implements Runnable {
 				socket.connect(socketAddress);
 			}
         } catch (Exception e) {
-       	 Log.e("TCP", "C: Error", e);
+        	Log.e("TCP", "C: Error", e);
         }
 	}
 }

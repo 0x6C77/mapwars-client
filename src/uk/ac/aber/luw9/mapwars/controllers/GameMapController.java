@@ -2,9 +2,6 @@ package uk.ac.aber.luw9.mapwars.controllers;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.osmdroid.events.MapListener;
-import org.osmdroid.events.ScrollEvent;
-import org.osmdroid.events.ZoomEvent;
 
 import uk.ac.aber.luw9.mapwars.GameMap;
 import uk.ac.aber.luw9.mapwars.HomeScreen;
@@ -13,13 +10,16 @@ import uk.ac.aber.luw9.mapwars.services.InternetService;
 import uk.ac.aber.luw9.mapwars.services.LocationTracker;
 import uk.ac.aber.luw9.mapwars.units.UnitType;
 import android.app.Activity;
-import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-public class GameMapController implements OnClickListener, MapListener {
+/**
+ * @author flabbyrabbit
+ */
+
+public class GameMapController implements OnClickListener {
 
 	private MainController mainController;
 	private GameMap gameMap;
@@ -44,28 +44,44 @@ public class GameMapController implements OnClickListener, MapListener {
 		this.unitController = new UnitController(map);
 	}
  
+	/**
+	 * Relay service message to gameMap
+	 * @param service Service online
+	 */
 	public void serviceOnline(String service) {
 		gameMap.serviceOnline(service);
 	}
-	
-	public void serviceUnavailable(String service) {
-		mainController.changePlaces(HomeScreen.class);
-	}
 
+	/**
+	 * Relay service message to gameMap and inform server
+	 * that the users location has updated
+	 * @param location Users current location
+	 */
 	public void updateUserLocation(Location location) {
 		serviceOnline("Location");
-		
 		internetService.updateLocation(location);
 	}
 	
+	/**
+	 * Get users location from location tracker
+	 * @return users location
+	 */
 	public Location getUserLocation() {
 		return locationTracker.getLocation();
 	}
 
+	/**
+	 * Pass unit updates to the unit controller
+	 * @param json updates
+	 * @throws JSONException
+	 */
 	public void handleUpdates(JSONObject json) throws JSONException {
 		unitController.handleUpdates(json);
 	}
 
+	/**
+	 * Stop mainController and unitController
+	 */
 	public void stop() {
 		mainController.stop();
 		unitController.stopThread();
@@ -82,49 +98,37 @@ public class GameMapController implements OnClickListener, MapListener {
     			gameMap.zoomOut();
     			break;
     		case R.id.trackLocationButton:
+    			//center map on users location
 				loc = locationTracker.getLocation();
-				gameMap.setUserLocation(loc);
+				gameMap.moveMap(loc);
     			break;
     		case R.id.headerShopButton:
     			gameMap.toggleShop();
     			break;
     		case R.id.vehicleBuyButton:
     			gameMap.toggleShop();
-    			//create unit
+    			//create unit in users location
     			loc = locationTracker.getLocation();
     			Log.i("GameMapController", loc.toString());
     			internetService.createUnit(UnitType.VEHICLE, loc);
-    			break;
-    		case R.id.defenceBuyButton:
-    			gameMap.toggleShop();
-    			//create unit
-    			loc = locationTracker.getLocation();
-    			Log.i("GameMapController", loc.toString());
-    			internetService.createUnit(UnitType.DEFENCE, loc);
     			break;
     		case R.id.selectToggleButton:
     			selectBox = !selectBox;
     			gameMap.toggleSelectButton(selectBox);
     			unitController.toggleSelectMethod(selectBox);
     			break;
+    		case R.id.mapToggleButton:
+    			gameMap.toggleMap();
+    			break;
 		}
 	}
 
+	
+	/**
+	 * Request for the game map to be redrawn
+	 */
 	public void redraw() {
 		gameMap.redraw();
-	}
-
-	@Override
-	public boolean onScroll(ScrollEvent arg0) {
-		Log.i("GameMapScroll", arg0.toString());
-		
-		return false;
-	}
-
-	@Override
-	public boolean onZoom(ZoomEvent arg0) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 	
 }

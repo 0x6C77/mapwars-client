@@ -21,13 +21,18 @@ import android.location.Location;
 import android.util.Log;
 import android.view.MotionEvent;
 
+/**
+ * Map overlay used to display units
+ * 
+ * @author Luke Ward
+ */
 public class UnitOverlay extends Overlay {
-	private Bitmap overlay_tank_user, overlay_tank_user_selected, overlay_tank_enemy, overlay_defence_user, overlay_defence_enemy;
-    private Bitmap tOverlay, uOverlay, eOverlay, usOverlay, dOverlay, deOverlay;
+	private Bitmap overlay_tank_user, overlay_tank_user_selected, overlay_tank_enemy, overlay_structure_user, overlay_structure_enemy;
+    private Bitmap tOverlay, uOverlay, eOverlay, usOverlay, sOverlay, seOverlay;
 	private UnitController unitController;
 	private ArrayList<Unit> unitsSelected = new ArrayList<Unit>();
-	private int TAP_RADIUS = 20;
-	private int UNIT_RADIUS = 25;
+	private int TAP_RADIUS = 25;
+	private int UNIT_RADIUS = 30;
 	private boolean unitSelecting;
 	private Point unitSelectionStart = new Point(), unitSelectionEnd = new Point();
 	private Boolean selectMethodBox = false;
@@ -35,16 +40,26 @@ public class UnitOverlay extends Overlay {
 	public UnitOverlay(UnitController controller, GameMap map) {
 		super(map.getApplicationContext());
 		this.unitController = controller;
+		
+		//Add self to map overlays
 		map.addOverlay(this);
 		
+		//Get resources to be used to represent each unit type
 		overlay_tank_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1);
 		overlay_tank_user_selected = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_1_selected);
 		overlay_tank_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.tank_2);
-		overlay_defence_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.defence_1);
-		overlay_defence_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.defence_2);
+		overlay_structure_user = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.structure_1);
+		overlay_structure_enemy = BitmapFactory.decodeResource(map.getApplicationContext().getResources(), R.drawable.structure_2);
 	}
 	
-	public boolean onTap(float tapX, float tapY, MapView mapView) {
+	/**
+	 * Handle taps on overly
+	 * 
+	 * @param tapX tap coordinate
+	 * @param tapY tap coordinate
+	 * @param mapView relevant map
+	 */
+	public void onTap(float tapX, float tapY, MapView mapView) {
         GeoPoint tapPoint = (GeoPoint) mapView.getProjection().fromPixels(tapX, tapY);
         Location tapLocation = new Location("point B");
         tapLocation.setLatitude(tapPoint.getLatitudeE6() / 1E6);
@@ -53,9 +68,8 @@ public class UnitOverlay extends Overlay {
         //Track if a new unit has been selected this tap
         boolean newUnit = false;
        
-		//look for unit
+		//look for units within tap range
 		ArrayList<Unit> units = unitController.getUnits(true);
-		
 	    for (Unit unit : units) {	    	
 	    	GeoPoint unitPoint = unit.getLocation();
  
@@ -64,15 +78,15 @@ public class UnitOverlay extends Overlay {
 	        unitLocation.setLongitude(unitPoint.getLongitudeE6() / 1E6);
 	        
 	        double distance = tapLocation.distanceTo(unitLocation);
-	        
 	        Log.i("UnitOverlayTap", String.valueOf(distance));
 	        
+	        //If unit is within range of users tap
 	        if (distance < TAP_RADIUS) {
 		    	//If the unit is already selected, unselect
 		    	if (unit.isSelected()) {
 			    	unit.unselect();
 			    	unitsSelected.remove(unit);
-		        } else {
+		        } else { //else select unit
 		        	unit.select();
 		        	unitsSelected.add(unit);
 		        }
@@ -94,7 +108,6 @@ public class UnitOverlay extends Overlay {
 
 	    //force redraw
 	    mapView.invalidate();
-		return false;
 	}
 	
 	@Override
@@ -105,17 +118,26 @@ public class UnitOverlay extends Overlay {
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+		/*
+		 * If in drag box selection mode track users movements as they
+		 * tap drag and release
+		 */
 		if (selectMethodBox) {
 			Log.i("UnitOverlayTouch",  event.toString());
 			int tmpX = Math.round(event.getX());
 			int tmpY = Math.round(event.getY());
 			
+			//Track users first tap and movements
 			if (event.getAction() == MotionEvent.ACTION_DOWN) {
 				mapView.getProjection().fromMapPixels(tmpX, tmpY, unitSelectionStart);
 			} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 				mapView.getProjection().fromMapPixels(tmpX, tmpY, unitSelectionEnd);
 				unitSelecting = true;
 				mapView.invalidate();
+				
+			/*
+			 * When user lifts finger select all units within boundary
+			 */
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				unitSelecting = false;
 				
@@ -152,22 +174,28 @@ public class UnitOverlay extends Overlay {
 	
 	@Override
     public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-       // super.draw(canvas, mapView, shadow);
+		//super.draw(canvas, mapView, shadow);
 		
 		//Shadows are not used so skip this draw
 		if (shadow)
 			return;
 		
+		//Convert unit radius to pixel size
         int radius = (int) mapView.getProjection().metersToEquatorPixels(UNIT_RADIUS);
         
         Point point = new Point();
         
+        //Scale resources to the correct size for this zoom level
 		usOverlay = Bitmap.createScaledBitmap(overlay_tank_user_selected, radius, radius, false);
 		uOverlay = Bitmap.createScaledBitmap(overlay_tank_user, radius, radius, false);
 		eOverlay = Bitmap.createScaledBitmap(overlay_tank_enemy, radius, radius, false);
-		dOverlay = Bitmap.createScaledBitmap(overlay_defence_user, radius, radius, false);
-		deOverlay = Bitmap.createScaledBitmap(overlay_defence_enemy, radius, radius, false);
+		sOverlay = Bitmap.createScaledBitmap(overlay_structure_user, radius, radius, false);
+		seOverlay = Bitmap.createScaledBitmap(overlay_structure_enemy, radius, radius, false);
 
+		
+		/*
+		 * Loop units drawing them on the overlay
+		 */
         ArrayList<Unit> units = unitController.getUnits();
 	    for (Unit unit : units) {
 	    	mapView.getProjection().toPixels(unit.getLocation(), point);
@@ -187,16 +215,16 @@ public class UnitOverlay extends Overlay {
 		    	} else {
 		    		tOverlay = eOverlay;
 		    	}
-	    	} else if (unit.getType() == UnitType.DEFENCE) {
+	    	} else if (unit.getType() == UnitType.STRUCTURE) {
 	    		if (unit.amOwner()) {
-	    			tOverlay = dOverlay;
+	    			tOverlay = sOverlay;
 	    		} else {
-    				tOverlay = deOverlay;	
+    				tOverlay = seOverlay;	
     			}
 	    	}
 	    	
 	    	// check if unit is under attack, if so show health indicator
-	    	if (unit.isSelected() || unit.underAttack()) {
+	    	if (unit.isSelected() || unit.isUnderAttack()) {
 	    		int healthContWidth = (int) mapView.getProjection().metersToEquatorPixels(50);
 	    		int healthHeight = (int) mapView.getProjection().metersToEquatorPixels(10);
 	    		float healthPerc = (float) unit.getHealth() / 100;
@@ -210,24 +238,30 @@ public class UnitOverlay extends Overlay {
     			Paint redPaint = new Paint();
     			redPaint.setColor(Color.RED);
 
+    			//draw health bar
     			canvas.drawRect(point.x-(healthContWidth/2), point.y-(healthHeight*2), point.x+(healthContWidth/2), point.y-(healthHeight*3), paint);
 	    		canvas.drawRect(point.x-(healthContWidth/2)+2, point.y-(healthHeight*2)-2, point.x-(healthContWidth/2)+healthWidth-2, point.y-(healthHeight*3)+2, redPaint);
 	    	}
 	    	
 
-
+	    	// Rotate resource to match bearing
 	        Matrix mat = new Matrix();
 	        mat.setTranslate(point.x - (radius/2), point.y - (radius/2));
 	        mat.postRotate(unit.getBearing(), point.x, point.y);
+	        
+	        //draw resource on overlay
 	        canvas.drawBitmap(tOverlay, mat, null);
         }
 
-	    if (!units.isEmpty()) {
-		    Unit unit = units.get(0);
-		    
-		    mapView.getProjection().toPixels(unit.getLocation(), point);
-	    }
+//	    if (!units.isEmpty()) {
+//		    Unit unit = units.get(0);
+//		    
+//		    mapView.getProjection().toPixels(unit.getLocation(), point);
+//	    }
 	    
+	    /*
+	     * If user is selecting using a box, draw a dotted red line to highlight area being drawn
+	     */
 		if (unitSelecting) {
 			Paint mPaint = new Paint();
 			mPaint.setDither(true);

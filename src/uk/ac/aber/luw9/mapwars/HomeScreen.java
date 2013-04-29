@@ -15,6 +15,9 @@ import android.view.View.OnKeyListener;
 import android.widget.Button;
 import android.widget.EditText;
 
+/**
+ * @author Luke Ward
+ */
 public class HomeScreen extends Activity implements OnClickListener, OnKeyListener {
 
 	MainController controller;
@@ -37,7 +40,7 @@ public class HomeScreen extends Activity implements OnClickListener, OnKeyListen
         login_pass = (EditText)findViewById(R.id.login_pass);
         login_pass.setOnKeyListener(this);
 
-        //load stored details and inject them into input
+        //load stored details and inject them into UI
         prefs = this.getSharedPreferences("uk.ac.aber.luw9.mapwarsv2", Context.MODE_PRIVATE);
 
         String username = prefs.getString("username", "");
@@ -76,25 +79,21 @@ public class HomeScreen extends Activity implements OnClickListener, OnKeyListen
 	            		.putString("password", password)
 	            		.commit();
 	            	
-	            	//((TextView)findViewById(R.id.login_error)).setHeight(android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-	            	
+	            	// Attempt user login
+	            	// Response is the ability to transmit request, not the response
 	            	boolean status = controller.loginUser(username, password);
 	            	if (!status) {
-	            		try {
-	            		    AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            		    AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 
-	            		    alertDialog.setTitle("No Internet Connection");
-	            		    alertDialog.setMessage("Internet not available, Please check your internet connectivity and try again");
-	            		    alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
-	            		       public void onClick(DialogInterface dialog, int which) {
-	            		         //finish();
-	            		       }
-	            		    });
+            		    alertDialog.setTitle("No Internet Connection");
+            		    alertDialog.setMessage("Internet not available, Please check your internet connectivity and try again");
+            		    alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+            		       public void onClick(DialogInterface dialog, int which) {
+            		         //finish();
+            		       }
+            		    });
 
-	            		    alertDialog.show();
-	            		} catch(Exception e) {
-	            			//
-	            		}
+            		    alertDialog.show();
 	            	}
             	}
             	
